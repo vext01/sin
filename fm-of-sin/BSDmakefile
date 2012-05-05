@@ -37,14 +37,14 @@
 TARGET = ${.CURDIR:C/.*\///g}
 
 ## you might use this for an older arduino
-UPLOAD_RATE = 19200
-PORT = /dev/cuaU0
-AVRDUDE_PROGRAMMER = stk500
+#UPLOAD_RATE = 19200
+#PORT = /dev/cuaU0
+#AVRDUDE_PROGRAMMER = stk500
 
 ## or for newer boards like the UNO
-#UPLOAD_RATE = 57600
-#PORT = /dev/cuaU0
-#AVRDUDE_PROGRAMMER = arduino
+UPLOAD_RATE = 115200
+PORT = /dev/cuaU0
+AVRDUDE_PROGRAMMER = arduino
 
 ## or this, if you have a usbtiny ISP
 #PORT = usb
