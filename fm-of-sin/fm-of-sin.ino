@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 4-digit year, Company or Person's Name
+ * Copyright (c) 2012, Edd Barrett <vext01@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
