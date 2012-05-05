@@ -44,7 +44,8 @@ struct ym2612 {
 	uint8_t		a1;
 };
 
-void setup(void) {
+void
+setup(void) {
 	int			i;
 
 	for (i = 0; i < 12; i++)
@@ -53,7 +54,8 @@ void setup(void) {
 	return;
 }
 
-void loop(void) {
+void
+loop(void) {
 	/* more of your code here */
 	return ;
 }
