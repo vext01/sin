@@ -21,22 +21,19 @@ extern "C" {
 #define VERSION			"0.1"
 
 /* Pin Mapping */
-#define YMPIN_D0		0
-#define YMPIN_D1		1
-#define YMPIN_D2		2
-#define YMPIN_D3		3
-#define YMPIN_D4		4
-#define YMPIN_D5		5
-#define YMPIN_D6		6
-#define YMPIN_D7		7
+#define YMPIN_D0		2
+#define YMPIN_D1		3
+#define YMPIN_D2		4
+#define YMPIN_D3		5
+#define YMPIN_D4		6
+#define YMPIN_D5		7
+#define YMPIN_D6		8
+#define YMPIN_D7		9
 
-#define YMPIN_WR		8
-#define YMPIN_RD		9
-#define YMPIN_CS		11
-#define YMPIN_A0		10
-#define YMPIN_A1		12
-
-#define PIN_LED			13
+#define YMPIN_WR		10
+#define YMPIN_RD		11
+#define YMPIN_A0		12
+#define YMPIN_A1		13
 
 /* Some pins are active low, others high */
 #define YMVAL_WR_ON		0
@@ -59,7 +56,10 @@ extern "C" {
 
 /* Delay between raising A* high then low (ms) */
 /* XXX this is a guess for now */
-#define YM_DELAY		2
+#define YM_DELAY		1
+
+/* Serial debugging? */
+//#define YM_DEBUG		1
 
 /* no need to be mega efficient (yet) */
 struct ym_2612 {
@@ -75,10 +75,9 @@ void
 setup(void) {
 	int			i;
 
+	/* turn on serial debugging */
 	Serial.begin(9600);
 	Serial.println("Starting up");
-	for (i = 0; i < 12; i++)
-		pinMode(i,  OUTPUT);
 
 	return;
 }
@@ -89,54 +88,121 @@ __cxa_pure_virtual(void)
 	while(1);
 } 
 
-/* output to ym2612 */
+#ifdef YM_DEBUG 
 void
-ym_do(struct ym_2612 *ym)
+ym_debug(struct ym_2612 *ym)
 {
 	int			i;
 
-	/* data bus */
-	for (i = 0; i < 8; i++)
-		digitalWrite(YMPIN_D0 + i, ym->data & (1 << i));
-
-	/* other */
-	digitalWrite(YMPIN_WR, ym->wr & 0x1);
-	digitalWrite(YMPIN_RD, ym->rd & 0x1);
-	digitalWrite(YMPIN_CS, ym->cs & 0x1);
-	digitalWrite(YMPIN_A0, ym->a0 & 0x1);
-	digitalWrite(YMPIN_A1, ym->a1 & 0x1);
-
-	return;
-}
-
-#if 0
-void
-debug_ym_2612(struct ym_2612 *ym)
-{
-	int			i;
-
-	Serial.println("Debug:");
+	Serial.println("DEBUG -------------------");
 
 	/* data bus */
-	for (i = 0; i < 8; i++)
-		Serial.println("YMPIN_D%u = %u", i, ym->data & (1 << i));
+	for (i = 0; i < 8; i++) {
+		Serial.write("YMPIN_D");
+		Serial.write(i);
+		Serial.write(" = ");
+		Serial.println((ym->data & (1 << i)) ? 1 : 0);
+	}
 
-	/* other */
-	Serial.println("YMPIN_WR = %u", ym->wr);
-	Serial.println("YMPIN_RD = %u", ym->rd);
-	Serial.println("YMPIN_CS = %u", ym->cs);
-	Serial.println("YMPIN_A0 = %u", ym->a0);
-	Serial.println("YMPIN_A1 = %u", ym->a1);
+	Serial.write("YMPIN_WR = ");
+	Serial.println(ym->wr);
+
+	Serial.write("YMPIN_RD = ");
+	Serial.println(ym->rd);
+
+	Serial.write("YMPIN_A0 = ");
+	Serial.println(ym->a0);
+
+	Serial.write("YMPIN_A1 = ");
+	Serial.println(ym->a1);
 
 	return;
 }
 #endif
+
+uint8_t
+ym_read_pin(uint8_t pin)
+{
+	pinMode(pin, INPUT);
+
+	digitalWrite(YMPIN_RD, YMVAL_RD_ON);
+	digitalWrite(YMPIN_WR, YMVAL_WR_OFF);
+	digitalWrite(YMPIN_A0, YMVAL_A0_ON);
+	digitalWrite(YMPIN_A1, YMVAL_A1_OFF);
+
+	return digitalRead(pin);
+}
+
+uint8_t
+ym_is_busy()
+{
+	return ym_read_pin(YMPIN_D7);
+}
+
+void
+ym_wait_until_ready()
+{
+	while (ym_is_busy()) {
+		Serial.write(".");
+		Serial.flush();
+		delay(10);
+	}
+
+	return;
+}
+
+/* output to ym2612 */
+void
+ym_write(struct ym_2612 *ym)
+{
+	int			i;
+
+	/* al pins are output */
+	for (i = 2; i < 14; i++)
+		pinMode(i, OUTPUT);
+
+#ifdef YM_DEBUG
+	ym_debug(ym);
+#endif
+
+	/* data bus */
+	for (i = 0; i < 8; i++)
+		digitalWrite(YMPIN_D0 + i, ym->data & (1 << i) ? 1 : 0);
+
+	/* other */
+	digitalWrite(YMPIN_WR, ym->wr & 0x1);
+	digitalWrite(YMPIN_RD, ym->rd & 0x1);
+	digitalWrite(YMPIN_A0, ym->a0 & 0x1);
+	digitalWrite(YMPIN_A1, ym->a1 & 0x1);
+
+	delay(10);
+	
+#ifdef YM_DEBUG
+	while (!Serial.available());
+	Serial.read();
+#endif
+
+	ym_wait_until_ready();
+
+	digitalWrite(YMPIN_A0, 1);
+	digitalWrite(YMPIN_A1, 1);
+
+	return;
+}
+
 
 /* select a register in the ym2612 */
 void
 ym_set_reg_addr(uint8_t addr, uint8_t part)
 {
 	struct ym_2612		ym;
+
+#ifdef YM_DEBUG
+	Serial.write("Set address to ");
+	Serial.println((int) addr);
+	Serial.write("On part ");
+	Serial.println(part);
+#endif
 
 	ym.data = addr;
 	ym.cs = YMVAL_CS_ON;
@@ -145,18 +211,25 @@ ym_set_reg_addr(uint8_t addr, uint8_t part)
 	ym.a0 = YMVAL_A0_OFF;
 	ym.a1 = part - 1;
 
-	ym_do(&ym);
+	ym_write(&ym);
 	delay(YM_DELAY);
 
-	ym.wr = YMVAL_WR_OFF;
-	ym_do(&ym);
-	delay(YM_DELAY);
+	//ym.wr = YMVAL_WR_OFF;
+	//ym_write(&ym);
+	//delay(YM_DELAY);
 }
 
 void
 ym_set_reg_data(uint8_t data, uint8_t part)
 {
 	struct ym_2612		ym;
+
+#ifdef YM_DEBUG
+	Serial.write("Set data to ");
+	Serial.println((int) data);
+	Serial.write("On part ");
+	Serial.println(part);
+#endif
 
 	ym.data = data;
 	ym.cs = YMVAL_CS_ON;
@@ -165,12 +238,12 @@ ym_set_reg_data(uint8_t data, uint8_t part)
 	ym.a0 = YMVAL_A0_ON;
 	ym.a1 = part - 1;
 
-	ym_do(&ym);
+	ym_write(&ym);
 	delay(YM_DELAY);
 
-	ym.wr = YMVAL_WR_OFF;
-	ym_do(&ym);
-	delay(YM_DELAY);
+	//ym.wr = YMVAL_WR_OFF;
+	//ym_write(&ym);
+	//delay(YM_DELAY);
 }
 
 void
@@ -189,16 +262,22 @@ loop(void) {
 	 * example program from:
 	 * http://www.smspower.org/maxim/Documents/YM2612
 	 */
-	delay(3000); // allow chip to wake up
 
-	Serial.println("LFO");
+	Serial.write("FM of Sin v");
+	Serial.println(VERSION);
+	Serial.println("---------------------------");
+
+	Serial.write("Waiting for ym2612 to wake up...");
+	Serial.flush();
+	ym_wait_until_ready();
+	Serial.println("OK!");
+
 	ym_write_reg(0x22, 0, 1);	// LFO off
 	ym_write_reg(0x27, 0, 1);	// Channel 3 mode normal
 
 	for (i = 0; i < 7; i ++)	// All channels off
 		ym_write_reg(0x28, i, 1);
 
-	Serial.println("DAC");
 	ym_write_reg(0x2b, 0, 1);	// DAC off
 
 	ym_write_reg(0x30, 0x71, 1);	// DT1/MUL
@@ -206,7 +285,6 @@ loop(void) {
 	ym_write_reg(0x38, 0x33, 1);	// "
 	ym_write_reg(0x3c, 0x01, 1);	// "
 
-	Serial.println("Level");
 	ym_write_reg(0x40, 0x23, 1);	// Total level
 	ym_write_reg(0x44, 0x2d, 1);	// "
 	ym_write_reg(0x48, 0x26, 1);	// "
@@ -217,7 +295,6 @@ loop(void) {
 	ym_write_reg(0x58, 0x5f, 1);	// "
 	ym_write_reg(0x5c, 0x94, 1);	// "
 
-	Serial.println("AM/D1R");
 	ym_write_reg(0x60, 0x05, 1);	// AM/D1R
 	ym_write_reg(0x64, 0x05, 1);	// "
 	ym_write_reg(0x68, 0x05, 1);	// "
@@ -228,7 +305,6 @@ loop(void) {
 	ym_write_reg(0x78, 0x02, 1);	// "
 	ym_write_reg(0x7C, 0x02, 1);	// "
 
-	Serial.println("D1L/RR");
 	ym_write_reg(0x80, 0x11, 1);	// D1L/RR
 	ym_write_reg(0x84, 0x11, 1);	// "
 	ym_write_reg(0x88, 0x11, 1);	// "
@@ -239,7 +315,6 @@ loop(void) {
 	ym_write_reg(0x98, 0x00, 1);	// "
 	ym_write_reg(0x9c, 0x00, 1);	// "
 
-	Serial.println("rest");
 	ym_write_reg(0xb0, 0x32, 1);	// Feedback/Algo
 	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
 	ym_write_reg(0x28, 0x00, 1);	// Key off
@@ -247,12 +322,14 @@ loop(void) {
 	ym_write_reg(0xa4, 0x22, 1);	// Set frequency
 	ym_write_reg(0xa0, 0x69, 1);	// "
 
-	Serial.println("Key");
-	ym_write_reg(0x28, 0xf0, 1);	// Key off
-	delay(2000);
-	ym_write_reg(0x28, 0x00, 1);	// Key off
-	delay(2000);
-	Serial.println("Done");
+	while (1) {
+		ym_write_reg(0x28, 0xf0, 1);	// Key on
+		Serial.println("Key on");
+		delay(1000);
+		ym_write_reg(0x28, 0x00, 1);	// Key off
+		Serial.println("Key off");
+		delay(1000);
+	}
 
 	return ;
 }
