@@ -246,7 +246,7 @@ setup(void) {
 	Serial.println(":::: ::    ::   ::   ::  ");
 	Serial.println(":: : :    :    ::    :   ");
 	Serial.println("");
-	Serial.println("Sin 8-bit Instrument");
+	Serial.println("Sin 8-bit Instrument - https://github.com/vext01/sin");
 	Serial.println(COPYRIGHT);
 	Serial.write("Version: ");
 	Serial.println(VERSION);
