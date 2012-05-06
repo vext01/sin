@@ -84,10 +84,6 @@ extern "C" {
 #define YMREG_D1L_RR		0x80
 #define YMREG_SSG_EG		0x90
 
-/* Delay between raising A* high then low (ms) */
-/* XXX this is a guess for now */
-#define YM_DELAY		1
-
 /* Serial debugging? */
 //#define YM_DEBUG		1
 
@@ -100,14 +96,12 @@ struct ym_2612 {
 	uint8_t		a1;
 };
 
-
 void		ym_write(struct ym_2612 *ym);
 void		ym_write_reg(uint8_t reg, uint8_t data, uint8_t part);
 
 /*
  * Given a channel return the part (1 or 2) and the channel offset (1-3).
- * Eg.
- * Channel 5 is part 2 offset 1
+ * Eg. Channel 5 is part 2 offset 1
  */
 void
 ym_get_chan_part_and_offset(uint8_t chan, uint8_t *part, uint8_t *offs)
@@ -248,7 +242,7 @@ extern "C" void
 __cxa_pure_virtual(void)
 {
 	while(1);
-} 
+}
 
 void
 ym_all_pins_output()
@@ -261,7 +255,7 @@ ym_all_pins_output()
 	pinMode(A0, OUTPUT);
 }
 
-#ifdef YM_DEBUG 
+#ifdef YM_DEBUG
 void
 ym_debug(struct ym_2612 *ym)
 {
@@ -300,8 +294,6 @@ ym_read_pin(uint8_t pin)
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
 
-	//delay(1);
-
 	ym_all_pins_output();
 	pinMode(pin, INPUT); /* XXX must be data bus (check) */
 
@@ -311,9 +303,7 @@ ym_read_pin(uint8_t pin)
 	digitalWrite(YMPIN_WR, YMVAL_WR_OFF);
 	digitalWrite(YMPIN_RD, YMVAL_RD_ON);
 
-	//delay(1);
 	val = digitalRead(pin);
-
 	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
 
 	return (val);
@@ -360,11 +350,8 @@ ym_write(struct ym_2612 *ym)
 	digitalWrite(YMPIN_A1, ym->a1 & 0x1);
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_ON);
-	//delay(1);
 	digitalWrite(YMPIN_WR, ym->wr & 0x1);
 	digitalWrite(YMPIN_RD, ym->rd & 0x1);
-
-	//delay(1);
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
 
@@ -372,15 +359,12 @@ ym_write(struct ym_2612 *ym)
 	while (!Serial.available());
 	Serial.read();
 #endif
-
 	ym_wait_until_ready();
 
 	digitalWrite(YMPIN_A0, YMVAL_A0_OFF);
 	digitalWrite(YMPIN_A1, YMVAL_A1_OFF);
 	digitalWrite(YMPIN_RD, YMVAL_RD_OFF);
 	digitalWrite(YMPIN_RD, YMVAL_WR_OFF);
-
-	//delay(1);
 
 	return;
 }
@@ -406,11 +390,6 @@ ym_set_reg_addr(uint8_t addr, uint8_t part)
 	ym.a1 = part - 1;
 
 	ym_write(&ym);
-	//delay(YM_DELAY);
-
-	//ym.wr = YMVAL_WR_OFF;
-	//ym_write(&ym);
-	//delay(YM_DELAY);
 }
 
 void
@@ -432,11 +411,6 @@ ym_set_reg_data(uint8_t data, uint8_t part)
 	ym.a1 = part - 1;
 
 	ym_write(&ym);
-	//delay(YM_DELAY);
-
-	//ym.wr = YMVAL_WR_OFF;
-	//ym_write(&ym);
-	//delay(YM_DELAY);
 }
 
 void
@@ -564,37 +538,16 @@ loop(void) {
 	ym_set_rs_ar(1, 3, 0x02, 0x1f);
 	ym_set_rs_ar(1, 4, 0x02, 0x14);
 
-	/* XXX test this */
-#if 0
-	ym_write_reg(0x60, 0x05, 1);	// AM/D1R
-	ym_write_reg(0x64, 0x05, 1);	// "
-	ym_write_reg(0x68, 0x05, 1);	// "
-	ym_write_reg(0x6c, 0x07, 1);	// "
-#endif
 	ym_set_am_d1r(1, 1, 0, 5);
 	ym_set_am_d1r(1, 2, 0, 5);
 	ym_set_am_d1r(1, 3, 0, 5);
 	ym_set_am_d1r(1, 4, 0, 7);
 
-	/* XXX */
-#if 0
-	ym_write_reg(0x70, 0x02, 1);	// D2R
-	ym_write_reg(0x74, 0x02, 1);	// "
-	ym_write_reg(0x78, 0x02, 1);	// "
-	ym_write_reg(0x7C, 0x02, 1);	// "
-#endif
 	ym_set_d2r(1, 1, 2);
 	ym_set_d2r(1, 2, 2);
 	ym_set_d2r(1, 3, 2);
 	ym_set_d2r(1, 4, 2);
 
-	/* XXX */
-#if 0
-	ym_write_reg(0x80, 0x11, 1);	// D1L/RR
-	ym_write_reg(0x84, 0x11, 1);	// "
-	ym_write_reg(0x88, 0x11, 1);	// "
-	ym_write_reg(0x8c, 0xa6, 1);	// "
-#endif
 	ym_set_d1l_rr(1, 1, 1, 1);
 	ym_set_d1l_rr(1, 2, 1, 1);
 	ym_set_d1l_rr(1, 3, 1, 1);
