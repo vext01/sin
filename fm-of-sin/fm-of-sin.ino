@@ -138,7 +138,7 @@ ym_read_pin(uint8_t pin)
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
 
-	delay(1);
+	//delay(1);
 
 	ym_all_pins_output();
 	pinMode(pin, INPUT); /* XXX must be data bus (check) */
@@ -149,7 +149,7 @@ ym_read_pin(uint8_t pin)
 	digitalWrite(YMPIN_WR, YMVAL_WR_OFF);
 	digitalWrite(YMPIN_RD, YMVAL_RD_ON);
 
-	delay(1);
+	//delay(1);
 	val = digitalRead(pin);
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
@@ -198,11 +198,11 @@ ym_write(struct ym_2612 *ym)
 	digitalWrite(YMPIN_A1, ym->a1 & 0x1);
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_ON);
-	delay(1);
+	//delay(1);
 	digitalWrite(YMPIN_WR, ym->wr & 0x1);
 	digitalWrite(YMPIN_RD, ym->rd & 0x1);
 
-	delay(1);
+	//delay(1);
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
 	
@@ -218,7 +218,7 @@ ym_write(struct ym_2612 *ym)
 	digitalWrite(YMPIN_RD, YMVAL_RD_OFF);
 	digitalWrite(YMPIN_RD, YMVAL_WR_OFF);
 
-	delay(1);
+	//delay(1);
 
 	return;
 }
@@ -244,7 +244,7 @@ ym_set_reg_addr(uint8_t addr, uint8_t part)
 	ym.a1 = part - 1;
 
 	ym_write(&ym);
-	delay(YM_DELAY);
+	//delay(YM_DELAY);
 
 	//ym.wr = YMVAL_WR_OFF;
 	//ym_write(&ym);
@@ -270,7 +270,7 @@ ym_set_reg_data(uint8_t data, uint8_t part)
 	ym.a1 = part - 1;
 
 	ym_write(&ym);
-	delay(YM_DELAY);
+	//delay(YM_DELAY);
 
 	//ym.wr = YMVAL_WR_OFF;
 	//ym_write(&ym);
@@ -299,6 +299,23 @@ ym_set_key(uint8_t chan, uint8_t onoff)
 
 	ym_write_reg(0x28, data, 1);
 
+}
+
+void
+ym_set_freq(uint8_t octave, uint16_t freq)
+{
+	uint8_t			data;
+
+	Serial.println(octave & 0x7);
+
+	/* two writes, MSB first essential */
+	data = (octave & 0x7) << 3;
+	data |= (freq & 0x0700) >> 8;
+	ym_write_reg(0xa4, data, 1);
+
+	/* LSB */
+	data = freq & 0xff;
+	ym_write_reg(0xa0, data, 1);
 }
 
 void
@@ -367,14 +384,16 @@ loop(void) {
 	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
 	ym_write_reg(0x28, 0x00, 1);	// Key off
 
-	ym_write_reg(0xa4, 0x22, 1);	// Set frequency
-	ym_write_reg(0xa0, 0x69, 1);	// "
-
-	
+	int octave = 4;
+	int freq = 300;
 	while (1) {
+		Serial.write("octave = ");
+		Serial.println(octave);
+		ym_set_freq(octave % 8, freq);
 		while (!Serial.available());
 		Serial.read();
 		ym_set_key(1, 1);
+		freq = freq + 100;
 	}
 
 	return ;
