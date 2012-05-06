@@ -158,6 +158,21 @@ ym_set_dt1_mul(uint8_t chan, uint8_t op, uint8_t dt1, uint8_t mul)
 	ym_write_reg(reg, data, part);
 }
 
+/* Per channel, per operator, AM and 1st decay rate */
+void
+ym_set_am_d1r(uint8_t chan, uint8_t op, uint8_t am, uint8_t d1r)
+{
+	uint8_t			data, part, offset, reg;
+
+	ym_get_chan_part_and_offset(chan, &part, &offset);
+	reg = YMREG_AM_D1R + ((op - 1) * 4) + offset;
+
+	data = (am & 0x1) << 7;
+	data |= (d1r & 0x1f);
+
+	ym_write_reg(reg, data, part);
+}
+
 
 /* Per channel, per operator, set total level (TL) */
 void
@@ -521,11 +536,17 @@ loop(void) {
 	ym_set_rs_ar(1, 3, 0x02, 0x1f);
 	ym_set_rs_ar(1, 4, 0x02, 0x14);
 
-	/* XXX */
+	/* XXX test this */
+#if 0
 	ym_write_reg(0x60, 0x05, 1);	// AM/D1R
 	ym_write_reg(0x64, 0x05, 1);	// "
 	ym_write_reg(0x68, 0x05, 1);	// "
 	ym_write_reg(0x6c, 0x07, 1);	// "
+#endif
+	ym_set_am_d1r(1, 1, 0, 5);
+	ym_set_am_d1r(1, 2, 0, 5);
+	ym_set_am_d1r(1, 3, 0, 5);
+	ym_set_am_d1r(1, 4, 0, 7);
 
 	/* XXX */
 	ym_write_reg(0x70, 0x02, 1);	// D2R
