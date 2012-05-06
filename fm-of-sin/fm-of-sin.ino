@@ -509,16 +509,86 @@ ym_set_dac(uint8_t enable, uint8_t dac)
 	ym_write_reg(YMREG_DAC_ENABLE, (enable & 0x2) << 6, 1);
 }
 
+/* Frequencies of notes when clocked 8MHz */
+#define YMNOTE_CSH		654
+#define YMNOTE_D		693
+#define YMNOTE_DSH		734
+#define YMNOTE_E		778
+#define YMNOTE_F		824
+#define YMNOTE_FSH		873
+#define YMNOTE_G		925
+#define YMNOTE_GSH		980
+#define YMNOTE_A		1038
+#define YMNOTE_ASH		1100
+#define YMNOTE_B		1165
+#define YMNOTE_C		1235
+void
+parse_serial_input(unsigned char c)
+{
+	//static uint8_t			last_freq = 0;
+	uint8_t		oct = 3;
+
+	switch (c) {
+	/* Note presses */
+	case 'q': /* C# */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_CSH);
+		ym_set_key(1, 1);
+		break;
+	case 'w': /* D# */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_DSH);
+		ym_set_key(1, 1);
+		break;
+	case 'r': /* F# */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_FSH);
+		ym_set_key(1, 1);
+		break;
+	case 't': /* G# */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_GSH);
+		ym_set_key(1, 1);
+		break;
+	case 'y': /* A# */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_ASH);
+		ym_set_key(1, 1);
+		break;
+	case 'a': /* D */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_D);
+		ym_set_key(1, 1);
+		break;
+	case 's': /* E */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_E);
+		ym_set_key(1, 1);
+		break;
+	case 'd': /* F */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_F);
+		ym_set_key(1, 1);
+		break;
+	case 'f': /* G */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_G);
+		ym_set_key(1, 1);
+		break;
+	case 'g': /* A */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_A);
+		ym_set_key(1, 1);
+		break;
+	case 'h': /* B */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_B);
+		ym_set_key(1, 1);
+		break;
+	case 'j': /* C */
+		ym_set_chan_octave_and_freq(1, oct, YMNOTE_C);
+		ym_set_key(1, 1);
+		break;
+	/* Mute playing note */
+	case ' ':
+		ym_set_key(1, 0);
+		break;
+	};
+}
 
 void
 loop(void) {
 	struct ym_2612		ym;
-	int			i;
-
-	/*
-	 * example program from:
-	 * http://www.smspower.org/maxim/Documents/YM2612
-	 */
+	unsigned char		char_in;
 
 	Serial.write("Sin v");
 	Serial.println(VERSION);
@@ -567,22 +637,21 @@ loop(void) {
 
 	ym_set_feedback_and_algo(0, 1);
 
+	/* XXX func for this reg */
 	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
+
+	ym_set_chan_octave_and_freq(1, 4, 600);
 	ym_set_key(1, 0);		// Key off
 
 
-	int freq = 600;
-	int algo = 0;
-	/* XXX parse commands from the serial line */
 	while (1) {
 
-		ym_set_chan_octave_and_freq(1, 4, freq);
-
 		while (!Serial.available());
-		Serial.read();
-		ym_set_key(1, 1);
+		char_in = Serial.read();
 
-		freq = freq + 100;
+		parse_serial_input(char_in);
+		//ym_set_key(1, 1);
+
 	}
 
 	return ;
