@@ -70,6 +70,8 @@ extern "C" {
 #define YMREG_PROPRIETARY4	0x9c
 
 #define YMREG_KEY		0x28
+#define YMREG_LFO		0x22
+#define YMREG_CH3_TIMERS	0x27
 
 /* Delay between raising A* high then low (ms) */
 /* XXX this is a guess for now */
@@ -391,6 +393,30 @@ ym_set_feedback_and_algo(uint8_t feedback, uint8_t algo)
 }
 
 void
+ym_set_lfo(uint8_t enable, uint8_t freq)
+{
+	uint8_t			data = (enable & 1) << 3;
+
+	data |= (freq & 0x7);
+	ym_write_reg(YMREG_LFO, data, 1);
+}
+
+void ym_set_ch3_mode_and_timers(uint8_t ch3, uint8_t reset_b, uint8_t reset_a,
+    uint8_t enable_b, uint8_t enable_a, uint8_t load_b, uint8_t load_a)
+{
+	uint8_t			data = (ch3 & 0x2) << 0x6;
+
+	data |= (reset_b & 0x1) << 5;
+	data |= (reset_a & 0x1) << 4;
+	data |= (enable_b & 0x1) << 3;
+	data |= (enable_a & 0x1) << 2;
+	data |= (load_b & 0x1) << 1;
+	data |= (load_a & 0x1);
+
+	ym_write_reg(YMREG_CH3_TIMERS, data, 1);
+}
+
+void
 loop(void) {
 	struct ym_2612		ym;
 	int			i;
@@ -400,7 +426,7 @@ loop(void) {
 	 * http://www.smspower.org/maxim/Documents/YM2612
 	 */
 
-	Serial.write("FM of Sin v");
+	Serial.write("Sin v");
 	Serial.println(VERSION);
 	Serial.println("---------------------------");
 
@@ -409,13 +435,8 @@ loop(void) {
 	ym_wait_until_ready();
 	Serial.println("OK!");
 
-	ym_write_reg(0x22, 0, 1);	// LFO off
-	ym_write_reg(0x27, 0, 1);	// Channel 3 mode normal
-
-#if 0
-	for (i = 0; i < 7; i ++)	// All channels off
-		ym_write_reg(0x28, i, 1);
-#endif
+	ym_set_lfo(0, 0);		// LFO off
+	ym_set_ch3_mode_and_timers(0, 0, 0, 0, 0, 0, 0);
 
 	ym_write_reg(0x2b, 0, 1);	// DAC off
 
