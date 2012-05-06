@@ -284,6 +284,23 @@ ym_write_reg(uint8_t reg, uint8_t data, uint8_t part)
 	ym_set_reg_data(data, part);
 }
 
+/* depress a key */
+void
+ym_set_key(uint8_t chan, uint8_t onoff)
+{
+	uint8_t			data = onoff ? 0xf0 : 0x00;
+
+	data |= chan - 1;
+
+	if (onoff)
+		Serial.println("Key on");
+	else
+		Serial.println("Key off");
+
+	ym_write_reg(0x28, data, 1);
+
+}
+
 void
 loop(void) {
 	struct ym_2612		ym;
@@ -353,13 +370,11 @@ loop(void) {
 	ym_write_reg(0xa4, 0x22, 1);	// Set frequency
 	ym_write_reg(0xa0, 0x69, 1);	// "
 
+	
 	while (1) {
-		ym_write_reg(0x28, 0xf0, 1);	// Key on
-		Serial.println("Key on");
-		delay(1000);
-		ym_write_reg(0x28, 0x00, 1);	// Key off
-		Serial.println("Key off");
-		delay(1000);
+		while (!Serial.available());
+		Serial.read();
+		ym_set_key(1, 1);
 	}
 
 	return ;
