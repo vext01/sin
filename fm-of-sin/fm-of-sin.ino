@@ -34,6 +34,7 @@ extern "C" {
 #define YMPIN_RD		11
 #define YMPIN_A0		12
 #define YMPIN_A1		13
+#define YMPIN_CS		A0
 
 /* Some pins are active low, others high */
 #define YMVAL_WR_ON		0
@@ -66,7 +67,6 @@ struct ym_2612 {
 	uint8_t		data;
 	uint8_t		wr;
 	uint8_t		rd;
-	uint8_t		cs;
 	uint8_t		a0;
 	uint8_t		a1;
 };
@@ -87,6 +87,17 @@ __cxa_pure_virtual(void)
 {
 	while(1);
 } 
+
+void
+ym_all_pins_output()
+{
+	int			i;
+
+	/* XXX hardcoded */
+	for (i = 2; i < 14; i++)
+		pinMode(i, OUTPUT);
+	pinMode(A0, OUTPUT);
+}
 
 #ifdef YM_DEBUG 
 void
@@ -123,14 +134,27 @@ ym_debug(struct ym_2612 *ym)
 uint8_t
 ym_read_pin(uint8_t pin)
 {
-	pinMode(pin, INPUT);
+	uint8_t		val;
 
-	digitalWrite(YMPIN_RD, YMVAL_RD_ON);
-	digitalWrite(YMPIN_WR, YMVAL_WR_OFF);
+	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
+
+	delay(1);
+
+	ym_all_pins_output();
+	pinMode(pin, INPUT); /* XXX must be data bus (check) */
+
 	digitalWrite(YMPIN_A0, YMVAL_A0_ON);
 	digitalWrite(YMPIN_A1, YMVAL_A1_OFF);
+	digitalWrite(YMPIN_CS, YMVAL_CS_ON);
+	digitalWrite(YMPIN_WR, YMVAL_WR_OFF);
+	digitalWrite(YMPIN_RD, YMVAL_RD_ON);
 
-	return digitalRead(pin);
+	delay(1);
+	val = digitalRead(pin);
+
+	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
+
+	return (val);
 }
 
 uint8_t
@@ -145,7 +169,7 @@ ym_wait_until_ready()
 	while (ym_is_busy()) {
 		Serial.write(".");
 		Serial.flush();
-		delay(10);
+		delay(1);
 	}
 
 	return;
@@ -157,25 +181,30 @@ ym_write(struct ym_2612 *ym)
 {
 	int			i;
 
-	/* al pins are output */
-	for (i = 2; i < 14; i++)
-		pinMode(i, OUTPUT);
+	ym_all_pins_output();
 
 #ifdef YM_DEBUG
 	ym_debug(ym);
 #endif
+
+	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
 
 	/* data bus */
 	for (i = 0; i < 8; i++)
 		digitalWrite(YMPIN_D0 + i, ym->data & (1 << i) ? 1 : 0);
 
 	/* other */
-	digitalWrite(YMPIN_WR, ym->wr & 0x1);
-	digitalWrite(YMPIN_RD, ym->rd & 0x1);
 	digitalWrite(YMPIN_A0, ym->a0 & 0x1);
 	digitalWrite(YMPIN_A1, ym->a1 & 0x1);
 
-	delay(10);
+	digitalWrite(YMPIN_CS, YMVAL_CS_ON);
+	delay(1);
+	digitalWrite(YMPIN_WR, ym->wr & 0x1);
+	digitalWrite(YMPIN_RD, ym->rd & 0x1);
+
+	delay(1);
+
+	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
 	
 #ifdef YM_DEBUG
 	while (!Serial.available());
@@ -184,8 +213,12 @@ ym_write(struct ym_2612 *ym)
 
 	ym_wait_until_ready();
 
-	digitalWrite(YMPIN_A0, 1);
-	digitalWrite(YMPIN_A1, 1);
+	digitalWrite(YMPIN_A0, YMVAL_A0_OFF);
+	digitalWrite(YMPIN_A1, YMVAL_A1_OFF);
+	digitalWrite(YMPIN_RD, YMVAL_RD_OFF);
+	digitalWrite(YMPIN_RD, YMVAL_WR_OFF);
+
+	delay(1);
 
 	return;
 }
@@ -205,7 +238,6 @@ ym_set_reg_addr(uint8_t addr, uint8_t part)
 #endif
 
 	ym.data = addr;
-	ym.cs = YMVAL_CS_ON;
 	ym.rd = YMVAL_RD_OFF;
 	ym.wr = YMVAL_WR_ON;
 	ym.a0 = YMVAL_A0_OFF;
@@ -232,7 +264,6 @@ ym_set_reg_data(uint8_t data, uint8_t part)
 #endif
 
 	ym.data = data;
-	ym.cs = YMVAL_CS_ON;
 	ym.rd = YMVAL_RD_OFF;
 	ym.wr = YMVAL_WR_ON;
 	ym.a0 = YMVAL_A0_ON;
