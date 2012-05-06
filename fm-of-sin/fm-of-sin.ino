@@ -381,7 +381,6 @@ ym_write(struct ym_2612 *ym)
 	return;
 }
 
-
 /* select a register in the ym2612 */
 void
 ym_set_reg_addr(uint8_t addr, uint8_t part)
@@ -525,7 +524,6 @@ ym_set_dac(uint8_t enable, uint8_t dac)
 void
 parse_serial_input(unsigned char c)
 {
-	//static uint8_t			last_freq = 0;
 	static uint8_t		oct = 3;
 
 	switch (c) {
