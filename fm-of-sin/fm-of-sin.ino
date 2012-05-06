@@ -161,6 +161,21 @@ ym_set_dt1_mul(uint8_t chan, uint8_t op, uint8_t dt1, uint8_t mul)
 
 /* Per channel, per operator, set total level (TL) */
 void
+ym_set_rs_ar(uint8_t chan, uint8_t op, uint8_t rs, uint8_t ar)
+{
+	uint8_t			data, part, offset, reg;
+
+	ym_get_chan_part_and_offset(chan, &part, &offset);
+	reg = YMREG_RS_AR + ((op - 1) * 4) + offset;
+
+	data = (rs & 0x3) << 6;
+	data |= (ar & 0x1f);
+
+	ym_write_reg(reg, data, part);
+}
+
+/* Per channel, per operator, set total level (TL) */
+void
 ym_set_tl(uint8_t chan, uint8_t op, uint8_t tl)
 {
 	uint8_t			data, part, offset, reg;
@@ -171,6 +186,7 @@ ym_set_tl(uint8_t chan, uint8_t op, uint8_t tl)
 	data = tl & 0x7f;
 	ym_write_reg(reg, data, part);
 }
+
 
 void
 setup(void) {
@@ -464,6 +480,7 @@ ym_set_dac(uint8_t enable, uint8_t dac)
 	ym_write_reg(YMREG_DAC_ENABLE, (enable & 0x2) << 6, 1);
 }
 
+
 void
 loop(void) {
 	struct ym_2612		ym;
@@ -494,32 +511,29 @@ loop(void) {
 	ym_set_dt1_mul(1, 3, 3, 3);
 	ym_set_dt1_mul(1, 4, 0, 1);
 
-#if 0
-	ym_write_reg(0x40, 0x23, 1);	// Total level
-	ym_write_reg(0x44, 0x2d, 1);	// "
-	ym_write_reg(0x48, 0x26, 1);	// "
-	ym_write_reg(0x4c, 0x00, 1);	// "
-#endif
 	ym_set_tl(1, 1, 0x23);
 	ym_set_tl(1, 2, 0x2d);
 	ym_set_tl(1, 3, 0x26);
 	ym_set_tl(1, 4, 0x00);
 
-	ym_write_reg(0x50, 0x5f, 1);	// RS/AR
-	ym_write_reg(0x54, 0x99, 1);	// "
-	ym_write_reg(0x58, 0x5f, 1);	// "
-	ym_write_reg(0x5c, 0x94, 1);	// "
+	ym_set_rs_ar(1, 1, 0x02, 0x1f);
+	ym_set_rs_ar(1, 2, 0x02, 0x19);
+	ym_set_rs_ar(1, 3, 0x02, 0x1f);
+	ym_set_rs_ar(1, 4, 0x02, 0x14);
 
+	/* XXX */
 	ym_write_reg(0x60, 0x05, 1);	// AM/D1R
 	ym_write_reg(0x64, 0x05, 1);	// "
 	ym_write_reg(0x68, 0x05, 1);	// "
 	ym_write_reg(0x6c, 0x07, 1);	// "
 
+	/* XXX */
 	ym_write_reg(0x70, 0x02, 1);	// D2R
 	ym_write_reg(0x74, 0x02, 1);	// "
 	ym_write_reg(0x78, 0x02, 1);	// "
 	ym_write_reg(0x7C, 0x02, 1);	// "
 
+	/* XXX */
 	ym_write_reg(0x80, 0x11, 1);	// D1L/RR
 	ym_write_reg(0x84, 0x11, 1);	// "
 	ym_write_reg(0x88, 0x11, 1);	// "
@@ -533,6 +547,7 @@ loop(void) {
 
 	int freq = 600;
 	int algo = 0;
+	/* XXX parse commands from the serial line */
 	while (1) {
 
 		ym_set_chan_octave_and_freq(1, 4, freq);
