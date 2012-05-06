@@ -53,12 +53,16 @@ extern "C" {
 #define YMVAL_A1_OFF		0
 
 /* ym2612 registers */
-#define YMREG_CHAN1_FREQ1	0xA0
-#define YMREG_CHAN1_FREQ2	0xA4
-#define YMREG_CHAN2_FREQ1	0xA1
-#define YMREG_CHAN2_FREQ2	0xA5
-#define YMREG_CHAN3_FREQ1	0xA2
-#define YMREG_CHAN3_FREQ2	0xA6
+#define YMREG_CHAN1_FREQ1	0xa0
+#define YMREG_CHAN1_FREQ2	0xa4
+#define YMREG_CHAN2_FREQ1	0xa1
+#define YMREG_CHAN2_FREQ2	0xa5
+#define YMREG_CHAN3_FREQ1	0xa2
+#define YMREG_CHAN3_FREQ2	0xa6
+
+#define YMREG_CHAN1_FBACK_ALGO	0xb0;
+#define YMREG_CHAN2_FBACK_ALGO	0xb1;
+#define YMREG_CHAN3_FBACK_ALGO	0xb2;
 
 /* Delay between raising A* high then low (ms) */
 /* XXX this is a guess for now */
@@ -306,35 +310,58 @@ ym_set_key(uint8_t chan, uint8_t onoff)
 
 }
 
+/*
+ * Given a channel return the part (1 or 2) and the channel offset (1-3).
+ * Eg.
+ * Channel 5 is part 2 offset 1
+ */
+void
+ym_get_chan_part_and_offset(uint8_t chan, uint8_t *part, uint8_t *offs)
+{
+	if ((chan >= 1) && (chan <= 3)) {
+		*part = 1;
+	} else if (chan <= 6) {
+		*part = 2;
+	} else {
+		Serial.println("ym_get_chan_part_and_offset: bad channel");
+		return;
+	}
+
+	*offs = (chan - 1) % 3;
+}
+
 /* set the frequency and octave of a chanel (1-6) */
 void
 ym_set_freq(uint8_t chan, uint8_t octave, uint16_t freq)
 {
-	uint8_t			data, part;
+	uint8_t			data, part, offs;
 	uint8_t			reg1, reg2;
 
-	if ((chan >= 1) && (chan <= 3)) {
-		part = 1;
-	} else if (chan <= 6) {
-		part = 2;
-	} else {
-		Serial.println("ym_set_freq: bad channel");
-		return;
-	}
+	ym_get_chan_part_and_offset(chan, &part, &offs);
 
-	reg1 = YMREG_CHAN1_FREQ1 + (chan - 1) % 3;
-	reg2 = YMREG_CHAN1_FREQ2 + (chan - 1) % 3;
+	reg1 = YMREG_CHAN1_FREQ1 + offs;
+	reg2 = YMREG_CHAN1_FREQ2 + offs;
 
 	Serial.println(octave & 0x7);
 
 	/* two writes, MSB first essential */
 	data = (octave & 0x7) << 3;
 	data |= (freq & 0x0700) >> 8;
-	ym_write_reg(reg2, data, 1);
+	ym_write_reg(reg2, data, part);
 
 	/* LSB */
 	data = freq & 0xff;
-	ym_write_reg(reg1, data, 1);
+	ym_write_reg(reg1, data, part);
+}
+
+void
+ym_set_feedback_and_algo(uint8_t feedback, uint8_t algo)
+{
+	uint8_t			data = (feedback & 0x7) << 3;
+
+	data |= (algo & 0x7);
+	ym_write_reg(0xb0, data, 1); /* XXX hardcoded 1 */
+
 }
 
 void
@@ -403,15 +430,26 @@ loop(void) {
 	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
 	ym_write_reg(0x28, 0x00, 1);	// Key off
 
+
 	int octave = 4;
-	int freq = 300;
+	int freq = 600;
+	int algo = 0;
 	while (1) {
 		Serial.write("octave = ");
+		ym_set_feedback_and_algo(0, algo++);
 		Serial.println(octave);
+
 		ym_set_freq(1, octave % 8, freq);
+		ym_set_freq(6, octave % 8, freq);
+
 		while (!Serial.available());
 		Serial.read();
 		ym_set_key(1, 1);
+
+		while (!Serial.available());
+		Serial.read();
+		ym_set_key(6, 1);
+
 		freq = freq + 100;
 	}
 
