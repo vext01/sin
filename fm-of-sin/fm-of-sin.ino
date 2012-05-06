@@ -73,6 +73,17 @@ extern "C" {
 #define YMREG_LFO		0x22
 #define YMREG_CH3_TIMERS	0x27
 
+#define YMREG_DAC		0x2a
+#define YMREG_DAC_ENABLE	0x2b
+
+#define YMREG_DT1_MUL		0x30
+#define YMREG_TL		0x40
+#define YMREG_RS_AR		0x50
+#define YMREG_AM_D1R		0x60
+#define YMREG_D2R		0x70
+#define YMREG_D1L_RR		0x80
+#define YMREG_SSG_EG		0x90
+
 /* Delay between raising A* high then low (ms) */
 /* XXX this is a guess for now */
 #define YM_DELAY		1
@@ -130,6 +141,21 @@ ym_zero_proprietary_regs()
 
 		}
 	}
+}
+
+/* Per channel, per operator, set detune and frequency multiple */
+void
+ym_set_dt1_mul(uint8_t chan, uint8_t op, uint8_t dt1, uint8_t mul)
+{
+	uint8_t			data, part, offset, reg;
+
+	ym_get_chan_part_and_offset(chan, &part, &offset);
+
+	reg = YMREG_DT1_MUL + ((op - 1) * 4) + offset;
+	data = (dt1 & 0x7) << 4;
+	data |= mul & 0xf;
+
+	ym_write_reg(reg, data, part);
 }
 
 void
@@ -268,7 +294,7 @@ ym_write(struct ym_2612 *ym)
 	//delay(1);
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
-	
+
 #ifdef YM_DEBUG
 	while (!Serial.available());
 	Serial.read();
@@ -401,7 +427,8 @@ ym_set_lfo(uint8_t enable, uint8_t freq)
 	ym_write_reg(YMREG_LFO, data, 1);
 }
 
-void ym_set_ch3_mode_and_timers(uint8_t ch3, uint8_t reset_b, uint8_t reset_a,
+void
+ym_set_ch3_mode_and_timers(uint8_t ch3, uint8_t reset_b, uint8_t reset_a,
     uint8_t enable_b, uint8_t enable_a, uint8_t load_b, uint8_t load_a)
 {
 	uint8_t			data = (ch3 & 0x2) << 0x6;
@@ -414,6 +441,13 @@ void ym_set_ch3_mode_and_timers(uint8_t ch3, uint8_t reset_b, uint8_t reset_a,
 	data |= (load_a & 0x1);
 
 	ym_write_reg(YMREG_CH3_TIMERS, data, 1);
+}
+
+void
+ym_set_dac(uint8_t enable, uint8_t dac)
+{
+	ym_write_reg(YMREG_DAC, dac, 1);
+	ym_write_reg(YMREG_DAC_ENABLE, (enable & 0x2) << 6, 1);
 }
 
 void
@@ -438,12 +472,13 @@ loop(void) {
 	ym_set_lfo(0, 0);		// LFO off
 	ym_set_ch3_mode_and_timers(0, 0, 0, 0, 0, 0, 0);
 
-	ym_write_reg(0x2b, 0, 1);	// DAC off
+	ym_set_dac(0, 0);		// no dac thanks
 
-	ym_write_reg(0x30, 0x71, 1);	// DT1/MUL
-	ym_write_reg(0x34, 0x0d, 1);	// "
-	ym_write_reg(0x38, 0x33, 1);	// "
-	ym_write_reg(0x3c, 0x01, 1);	// "
+	/* set channel multiplier and detunes */
+	ym_set_dt1_mul(1, 1, 7, 1);
+	ym_set_dt1_mul(1, 2, 0, 13);
+	ym_set_dt1_mul(1, 3, 3, 3);
+	ym_set_dt1_mul(1, 4, 0, 1);
 
 	ym_write_reg(0x40, 0x23, 1);	// Total level
 	ym_write_reg(0x44, 0x2d, 1);	// "
