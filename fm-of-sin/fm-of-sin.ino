@@ -150,11 +150,25 @@ ym_set_dt1_mul(uint8_t chan, uint8_t op, uint8_t dt1, uint8_t mul)
 	uint8_t			data, part, offset, reg;
 
 	ym_get_chan_part_and_offset(chan, &part, &offset);
-
 	reg = YMREG_DT1_MUL + ((op - 1) * 4) + offset;
+
 	data = (dt1 & 0x7) << 4;
 	data |= mul & 0xf;
 
+	ym_write_reg(reg, data, part);
+}
+
+
+/* Per channel, per operator, set total level (TL) */
+void
+ym_set_tl(uint8_t chan, uint8_t op, uint8_t tl)
+{
+	uint8_t			data, part, offset, reg;
+
+	ym_get_chan_part_and_offset(chan, &part, &offset);
+	reg = YMREG_TL + ((op - 1) * 4) + offset;
+
+	data = tl & 0x7f;
 	ym_write_reg(reg, data, part);
 }
 
@@ -480,10 +494,16 @@ loop(void) {
 	ym_set_dt1_mul(1, 3, 3, 3);
 	ym_set_dt1_mul(1, 4, 0, 1);
 
+#if 0
 	ym_write_reg(0x40, 0x23, 1);	// Total level
 	ym_write_reg(0x44, 0x2d, 1);	// "
 	ym_write_reg(0x48, 0x26, 1);	// "
 	ym_write_reg(0x4c, 0x00, 1);	// "
+#endif
+	ym_set_tl(1, 1, 0x23);
+	ym_set_tl(1, 2, 0x2d);
+	ym_set_tl(1, 3, 0x26);
+	ym_set_tl(1, 4, 0x00);
 
 	ym_write_reg(0x50, 0x5f, 1);	// RS/AR
 	ym_write_reg(0x54, 0x99, 1);	// "
