@@ -249,10 +249,22 @@ ym_all_pins_output()
 {
 	int			i;
 
-	/* XXX hardcoded */
-	for (i = 2; i < 14; i++)
-		pinMode(i, OUTPUT);
-	pinMode(A0, OUTPUT);
+	/* data bus */
+	pinMode(YMPIN_D0, OUTPUT);
+	pinMode(YMPIN_D1, OUTPUT);
+	pinMode(YMPIN_D2, OUTPUT);
+	pinMode(YMPIN_D3, OUTPUT);
+	pinMode(YMPIN_D4, OUTPUT);
+	pinMode(YMPIN_D5, OUTPUT);
+	pinMode(YMPIN_D6, OUTPUT);
+	pinMode(YMPIN_D7, OUTPUT);
+
+	/* other pins */
+	pinMode(YMPIN_WR, OUTPUT);
+	pinMode(YMPIN_RD, OUTPUT);
+	pinMode(YMPIN_CS, OUTPUT);
+	pinMode(YMPIN_A0, OUTPUT);
+	pinMode(YMPIN_A1, OUTPUT);
 }
 
 #ifdef YM_DEBUG
