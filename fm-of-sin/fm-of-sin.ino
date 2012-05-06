@@ -18,7 +18,8 @@
 extern "C" {
 #endif
 
-#define VERSION			"0.1"
+#define VERSION		"0.1"
+#define COPYRIGHT	"(c) Edd Barrett 2012 - Released under the ISC License"
 
 /* Pin Mapping */
 #define YMPIN_D0		2
@@ -231,7 +232,24 @@ setup(void) {
 
 	/* turn on serial debugging */
 	Serial.begin(9600);
-	Serial.println("Starting up");
+
+	Serial.println("");
+	Serial.println("");
+	Serial.println(" @@@@@@   @@@  @@@  @@@  ");
+	Serial.println("@@@@@@@   @@@  @@@@ @@@  ");
+	Serial.println("!@@       @@!  @@!@!@@@  ");
+	Serial.println("!@!       !@!  !@!!@!@!  ");
+	Serial.println("!!@@!!    !!@  @!@ !!@!  ");
+	Serial.println(" !!@!!!   !!!  !@!  !!!  ");
+	Serial.println("     !:!  !!:  !!:  !!!  ");
+	Serial.println("    !:!   :!:  :!:  !:!  ");
+	Serial.println(":::: ::    ::   ::   ::  ");
+	Serial.println(":: : :    :    ::    :   ");
+	Serial.println("");
+	Serial.println("Sin 8-bit Instrument");
+	Serial.println(COPYRIGHT);
+	Serial.write("Version: ");
+	Serial.println(VERSION);
 
 	ym_zero_proprietary_regs();
 
@@ -612,10 +630,6 @@ void
 loop(void) {
 	struct ym_2612		ym;
 	unsigned char		char_in;
-
-	Serial.write("Sin v");
-	Serial.println(VERSION);
-	Serial.println("---------------------------");
 
 	Serial.write("Waiting for ym2612 to wake up...");
 	Serial.flush();
