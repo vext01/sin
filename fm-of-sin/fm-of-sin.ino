@@ -526,7 +526,7 @@ void
 parse_serial_input(unsigned char c)
 {
 	//static uint8_t			last_freq = 0;
-	uint8_t		oct = 3;
+	static uint8_t		oct = 3;
 
 	switch (c) {
 	/* Note presses */
@@ -581,6 +581,31 @@ parse_serial_input(unsigned char c)
 	/* Mute playing note */
 	case ' ':
 		ym_set_key(1, 0);
+		break;
+	/* octave switch */
+	case 'z':
+		oct = 0;
+		break;
+	case 'x':
+		oct = 1;
+		break;
+	case 'c':
+		oct = 2;
+		break;
+	case 'v':
+		oct = 3;
+		break;
+	case 'b':
+		oct = 4;
+		break;
+	case 'n':
+		oct = 5;
+		break;
+	case 'm':
+		oct = 6;
+		break;
+	case ',':
+		oct = 7;
 		break;
 	};
 }
