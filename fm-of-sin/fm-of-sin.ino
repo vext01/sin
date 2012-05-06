@@ -187,6 +187,21 @@ ym_set_d2r(uint8_t chan, uint8_t op, uint8_t d2r)
 	ym_write_reg(reg, data, part);
 }
 
+/* Per channel, per operator, secondary amplitude (D1L) and release rate (RR) */
+void
+ym_set_d1l_rr(uint8_t chan, uint8_t op, uint8_t d1l, uint8_t rr)
+{
+	uint8_t			data, part, offset, reg;
+
+	ym_get_chan_part_and_offset(chan, &part, &offset);
+	reg = YMREG_D1L_RR + ((op - 1) * 4) + offset;
+
+	data = (d1l & 0xf) << 4;
+	data = (rr & 0xf);
+
+	ym_write_reg(reg, data, part);
+}
+
 /* Per channel, per operator, set total level (TL) */
 void
 ym_set_rs_ar(uint8_t chan, uint8_t op, uint8_t rs, uint8_t ar)
@@ -574,10 +589,16 @@ loop(void) {
 	ym_set_d2r(1, 4, 2);
 
 	/* XXX */
+#if 0
 	ym_write_reg(0x80, 0x11, 1);	// D1L/RR
 	ym_write_reg(0x84, 0x11, 1);	// "
 	ym_write_reg(0x88, 0x11, 1);	// "
 	ym_write_reg(0x8c, 0xa6, 1);	// "
+#endif
+	ym_set_d1l_rr(1, 1, 1, 1);
+	ym_set_d1l_rr(1, 2, 1, 1);
+	ym_set_d1l_rr(1, 3, 1, 1);
+	ym_set_d1l_rr(1, 4, 0xa, 0x6);
 
 	ym_set_feedback_and_algo(0, 1);
 
