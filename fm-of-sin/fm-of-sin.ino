@@ -53,7 +53,12 @@ extern "C" {
 #define YMVAL_A1_OFF		0
 
 /* ym2612 registers */
-/* define them here? XXX */
+#define YMREG_CHAN1_FREQ1	0xA0
+#define YMREG_CHAN1_FREQ2	0xA4
+#define YMREG_CHAN2_FREQ1	0xA1
+#define YMREG_CHAN2_FREQ2	0xA5
+#define YMREG_CHAN3_FREQ1	0xA2
+#define YMREG_CHAN3_FREQ2	0xA6
 
 /* Delay between raising A* high then low (ms) */
 /* XXX this is a guess for now */
@@ -301,21 +306,35 @@ ym_set_key(uint8_t chan, uint8_t onoff)
 
 }
 
+/* set the frequency and octave of a chanel (1-6) */
 void
-ym_set_freq(uint8_t octave, uint16_t freq)
+ym_set_freq(uint8_t chan, uint8_t octave, uint16_t freq)
 {
-	uint8_t			data;
+	uint8_t			data, part;
+	uint8_t			reg1, reg2;
+
+	if ((chan >= 1) && (chan <= 3)) {
+		part = 1;
+	} else if (chan <= 6) {
+		part = 2;
+	} else {
+		Serial.println("ym_set_freq: bad channel");
+		return;
+	}
+
+	reg1 = YMREG_CHAN1_FREQ1 + (chan - 1) % 3;
+	reg2 = YMREG_CHAN1_FREQ2 + (chan - 1) % 3;
 
 	Serial.println(octave & 0x7);
 
 	/* two writes, MSB first essential */
 	data = (octave & 0x7) << 3;
 	data |= (freq & 0x0700) >> 8;
-	ym_write_reg(0xa4, data, 1);
+	ym_write_reg(reg2, data, 1);
 
 	/* LSB */
 	data = freq & 0xff;
-	ym_write_reg(0xa0, data, 1);
+	ym_write_reg(reg1, data, 1);
 }
 
 void
@@ -389,7 +408,7 @@ loop(void) {
 	while (1) {
 		Serial.write("octave = ");
 		Serial.println(octave);
-		ym_set_freq(octave % 8, freq);
+		ym_set_freq(1, octave % 8, freq);
 		while (!Serial.available());
 		Serial.read();
 		ym_set_key(1, 1);
