@@ -86,7 +86,8 @@ extern "C" {
 #define YMREG_SSG_EG		0x90
 
 /* Serial debugging? */
-//#define YM_DEBUG		1
+#define YM_DEBUG		1
+uint8_t		debug_enable = 0;
 
 /* no need to be mega efficient (yet) */
 struct ym_2612 {
@@ -113,6 +114,7 @@ ym_get_chan_part_and_offset(uint8_t chan, uint8_t *part, uint8_t *offs)
 		*part = 2;
 	} else {
 		Serial.println("ym_get_chan_part_and_offset: bad channel");
+		Serial.println(chan);
 		return;
 	}
 
@@ -145,6 +147,7 @@ ym_set_dt1_mul(uint8_t chan, uint8_t op, uint8_t dt1, uint8_t mul)
 	uint8_t			data, part, offset, reg;
 
 	ym_get_chan_part_and_offset(chan, &part, &offset);
+
 	reg = YMREG_DT1_MUL + ((op - 1) * 4) + offset;
 
 	data = (dt1 & 0x7) << 4;
@@ -197,7 +200,7 @@ ym_set_d1l_rr(uint8_t chan, uint8_t op, uint8_t d1l, uint8_t rr)
 	ym_write_reg(reg, data, part);
 }
 
-/* Per channel, per operator, set total level (TL) */
+/* Per channel, per operator, rate scaling and attack rate */
 void
 ym_set_rs_ar(uint8_t chan, uint8_t op, uint8_t rs, uint8_t ar)
 {
@@ -291,9 +294,14 @@ ym_debug(struct ym_2612 *ym)
 {
 	int			i;
 
+	if (debug_enable == 0)
+		return;
+
 	Serial.println("DEBUG -------------------");
 
 	/* data bus */
+	Serial.write("Data bus = ");
+	Serial.println(ym->data);
 	for (i = 0; i < 8; i++) {
 		Serial.write("YMPIN_D");
 		Serial.write(i);
@@ -312,6 +320,9 @@ ym_debug(struct ym_2612 *ym)
 
 	Serial.write("YMPIN_A1 = ");
 	Serial.println(ym->a1);
+
+	while (!Serial.available());
+	Serial.read();
 
 	return;
 }
@@ -385,10 +396,6 @@ ym_write(struct ym_2612 *ym)
 
 	digitalWrite(YMPIN_CS, YMVAL_CS_OFF);
 
-#ifdef YM_DEBUG
-	while (!Serial.available());
-	Serial.read();
-#endif
 	ym_wait_until_ready();
 
 	digitalWrite(YMPIN_A0, YMVAL_A0_OFF);
@@ -406,10 +413,12 @@ ym_set_reg_addr(uint8_t addr, uint8_t part)
 	struct ym_2612		ym;
 
 #ifdef YM_DEBUG
-	Serial.write("Set address to ");
-	Serial.println((int) addr);
-	Serial.write("On part ");
-	Serial.println(part);
+	if (debug_enable) {
+		Serial.write("Set address to ");
+		Serial.println((int) addr);
+		Serial.write("On part ");
+		Serial.println(part);
+	}
 #endif
 
 	ym.data = addr;
@@ -427,10 +436,12 @@ ym_set_reg_data(uint8_t data, uint8_t part)
 	struct ym_2612		ym;
 
 #ifdef YM_DEBUG
-	Serial.write("Set data to ");
-	Serial.println((int) data);
-	Serial.write("On part ");
-	Serial.println(part);
+	if (debug_enable) {
+		Serial.write("Set data to ");
+		Serial.println((int) data);
+		Serial.write("On part ");
+		Serial.println(part);
+	}
 #endif
 
 	ym.data = data;
@@ -455,7 +466,16 @@ ym_set_key(uint8_t chan, uint8_t onoff)
 {
 	uint8_t			data = onoff ? 0xf0 : 0x00;
 
-	data |= chan - 1;
+	Serial.println("Chan");
+	Serial.println(chan);
+
+	Serial.println("onoff");
+	Serial.println(onoff);
+
+	if (chan <= 3)
+		data |= (chan - 1);
+	else
+		data |= chan; /* weird isn't it */
 
 	ym_write_reg(YMREG_KEY, data, 1);
 
@@ -526,6 +546,14 @@ ym_set_dac(uint8_t enable, uint8_t dac)
 	ym_write_reg(YMREG_DAC_ENABLE, (enable & 0x2) << 6, 1);
 }
 
+uint8_t
+cycle_key_channel(uint8_t c)
+{
+	if (++c > 6)
+		c = 1;
+	return (c);
+}
+
 /* Frequencies of notes when clocked 8MHz */
 #define YMNOTE_CSH		654
 #define YMNOTE_D		693
@@ -543,60 +571,76 @@ void
 parse_serial_input(unsigned char c)
 {
 	static uint8_t		oct = 3;
+	static uint8_t		key_chan = 1;
+
+	Serial.println("Channel:");
+	Serial.println(key_chan);
 
 	switch (c) {
 	/* Note presses */
 	case 'q': /* C# */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_CSH);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_CSH);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'w': /* D# */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_DSH);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_DSH);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'r': /* F# */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_FSH);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_FSH);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 't': /* G# */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_GSH);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_GSH);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'y': /* A# */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_ASH);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_ASH);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'a': /* D */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_D);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_D);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 's': /* E */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_E);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_E);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'd': /* F */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_F);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_F);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'f': /* G */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_G);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_G);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'g': /* A */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_A);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_A);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'h': /* B */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_B);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_B);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'j': /* C */
-		ym_set_chan_octave_and_freq(1, oct, YMNOTE_C);
-		ym_set_key(1, 1);
+		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_C);
+		ym_set_key(key_chan, 1);
+		key_chan = cycle_key_channel(key_chan);
 		break;
 	/* Mute playing note */
 	case ' ':
-		ym_set_key(1, 0);
+		ym_set_key(1, 0); /* XXX other chans */
 		break;
 	/* octave switch */
 	case 'z':
@@ -630,56 +674,106 @@ void
 loop(void) {
 	struct ym_2612		ym;
 	unsigned char		char_in;
+	uint8_t			chan;
 
 	Serial.write("Waiting for ym2612 to wake up...");
 	Serial.flush();
 	ym_wait_until_ready();
 	Serial.println("OK!");
 
-	ym_set_lfo(0, 0);		// LFO off
 	ym_set_ch3_mode_and_timers(0, 0, 0, 0, 0, 0, 0);
 
 	ym_set_dac(0, 0);		// no dac thanks
 
-	/* set channel multiplier and detunes */
-	ym_set_dt1_mul(1, 1, 7, 1);
-	ym_set_dt1_mul(1, 2, 0, 13);
-	ym_set_dt1_mul(1, 3, 3, 3);
-	ym_set_dt1_mul(1, 4, 0, 1);
+	/* grand piano */
+	ym_set_lfo(0, 0);		// LFO off
 
-	ym_set_tl(1, 1, 0x23);
-	ym_set_tl(1, 2, 0x2d);
-	ym_set_tl(1, 3, 0x26);
-	ym_set_tl(1, 4, 0x00);
+	for (chan = 1; chan < 7; chan++) {
+		/* set channel multiplier and detunes */
+		ym_set_dt1_mul(chan, 1, 7, 1);
+		ym_set_dt1_mul(chan, 2, 0, 13);
+		ym_set_dt1_mul(chan, 3, 3, 3);
+		ym_set_dt1_mul(chan, 4, 0, 1);
 
-	ym_set_rs_ar(1, 1, 0x02, 0x1f);
-	ym_set_rs_ar(1, 2, 0x02, 0x19);
-	ym_set_rs_ar(1, 3, 0x02, 0x1f);
-	ym_set_rs_ar(1, 4, 0x02, 0x14);
+		ym_set_tl(chan, 1, 0x23);
+		ym_set_tl(chan, 2, 0x2d);
+		ym_set_tl(chan, 3, 0x26);
+		ym_set_tl(chan, 4, 0x00);
 
-	ym_set_am_d1r(1, 1, 0, 5);
-	ym_set_am_d1r(1, 2, 0, 5);
-	ym_set_am_d1r(1, 3, 0, 5);
-	ym_set_am_d1r(1, 4, 0, 7);
+		ym_set_rs_ar(chan, 1, 0x02, 0x1f);
+		ym_set_rs_ar(chan, 2, 0x02, 0x19);
+		ym_set_rs_ar(chan, 3, 0x02, 0x1f);
+		ym_set_rs_ar(chan, 4, 0x02, 0x14);
 
-	ym_set_d2r(1, 1, 2);
-	ym_set_d2r(1, 2, 2);
-	ym_set_d2r(1, 3, 2);
-	ym_set_d2r(1, 4, 2);
+		ym_set_am_d1r(chan, 1, 0, 5);
+		ym_set_am_d1r(chan, 2, 0, 5);
+		ym_set_am_d1r(chan, 3, 0, 5);
+		ym_set_am_d1r(chan, 4, 0, 7);
 
-	ym_set_d1l_rr(1, 1, 1, 1);
-	ym_set_d1l_rr(1, 2, 1, 1);
-	ym_set_d1l_rr(1, 3, 1, 1);
-	ym_set_d1l_rr(1, 4, 0xa, 0x6);
+		ym_set_d2r(chan, 1, 2);
+		ym_set_d2r(chan, 2, 2);
+		ym_set_d2r(chan, 3, 2);
+		ym_set_d2r(chan, 4, 2);
+
+		ym_set_d1l_rr(chan, 1, 1, 1);
+		ym_set_d1l_rr(chan, 2, 1, 1);
+		ym_set_d1l_rr(chan, 3, 1, 1);
+		ym_set_d1l_rr(chan, 4, 0xa, 0x6);
+	}
 
 	ym_set_feedback_and_algo(0, 1);
+
+#if 0
+	THIS FAILED - CHECK DGEN CODE
+	/*
+	 * Flying Battery Bass
+	 */
+
+	int chan;
+
+	for (chan = 1; chan < 7; chan++) {
+		/* set channel multiplier and detunes */
+		ym_set_dt1_mul(chan, 1, 3, 6);
+		ym_set_dt1_mul(chan, 2, 0, 4);
+		ym_set_dt1_mul(chan, 3, 0, 0x0a);
+		ym_set_dt1_mul(chan, 4, 5, 2);
+
+		ym_set_tl(chan, 1, 0x1b0 >> 3);
+		ym_set_tl(chan, 2, 0x108 >> 3);
+		ym_set_tl(chan, 3, 0x1cl >> 3);
+		ym_set_tl(chan, 4, 0x78 >> 3);
+
+		ym_set_rs_ar(chan, 1, 0x03, 0x4c);
+		ym_set_rs_ar(chan, 2, 0x03, 0x48);
+		ym_set_rs_ar(chan, 3, 0x03, 0x4a);
+		ym_set_rs_ar(chan, 4, 0x03, 0x44);
+
+		ym_set_am_d1r(chan, 1, 0, 0x3c);
+		ym_set_am_d1r(chan, 2, 0, 0x2a);
+		ym_set_am_d1r(chan, 3, 0, 0x22);
+		ym_set_am_d1r(chan, 4, 0, 0x28);
+
+		ym_set_d2r(chan, 1, 0x38);
+		ym_set_d2r(chan, 2, 0x38);
+		ym_set_d2r(chan, 3, 0x46);
+		ym_set_d2r(chan, 4, 0x36);
+
+		ym_set_d1l_rr(chan, 1, 1, 1);
+		ym_set_d1l_rr(chan, 2, 1, 1);
+		ym_set_d1l_rr(chan, 3, 1, 1);
+		ym_set_d1l_rr(chan, 4, 0xa, 0x6);
+	}
+
+	ym_set_feedback_and_algo(0x0d, 0);
+#endif
 
 	/* XXX func for this reg */
 	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
 
-	ym_set_chan_octave_and_freq(1, 4, 600);
-	ym_set_key(1, 0);		// Key off
-
+	for (chan = 1; chan < 7; chan++) {
+		ym_set_chan_octave_and_freq(1, 4, 600);
+		ym_set_key(chan, 0);		// Key off
+	}
 
 	while (1) {
 
