@@ -85,6 +85,8 @@ extern "C" {
 #define YMREG_D1L_RR		0x80
 #define YMREG_SSG_EG		0x90
 
+#define YMREG_FB_ALGO		0xb0
+
 /* Serial debugging? */
 #define YM_DEBUG		1
 uint8_t		debug_enable = 0;
@@ -494,6 +496,9 @@ ym_set_chan_octave_and_freq(uint8_t chan, uint8_t octave, uint16_t freq)
 	reg1 = YMREG_CHAN1_FREQ1 + offs;
 	reg2 = YMREG_CHAN1_FREQ2 + offs;
 
+	Serial.println("Offset");
+	Serial.println(offs);
+
 	/* two writes, MSB first essential */
 	data = (octave & 0x7) << 3;
 	data |= (freq & 0x0700) >> 8;
@@ -505,12 +510,15 @@ ym_set_chan_octave_and_freq(uint8_t chan, uint8_t octave, uint16_t freq)
 }
 
 void
-ym_set_feedback_and_algo(uint8_t feedback, uint8_t algo)
+ym_set_feedback_and_algo(uint8_t chan, uint8_t feedback, uint8_t algo)
 {
 	uint8_t			data = (feedback & 0x7) << 3;
+	uint8_t			part, offs;
+
+	ym_get_chan_part_and_offset(chan, &part, &offs);
 
 	data |= (algo & 0x7);
-	ym_write_reg(0xb0, data, 1); /* XXX hardcoded 1 */
+	ym_write_reg(YMREG_FB_ALGO + offs, data, 1);
 
 }
 
@@ -719,9 +727,10 @@ loop(void) {
 		ym_set_d1l_rr(chan, 2, 1, 1);
 		ym_set_d1l_rr(chan, 3, 1, 1);
 		ym_set_d1l_rr(chan, 4, 0xa, 0x6);
+
+		ym_set_feedback_and_algo(chan, 0, 1);
 	}
 
-	ym_set_feedback_and_algo(0, 1);
 
 #if 0
 	THIS FAILED - CHECK DGEN CODE
@@ -769,9 +778,15 @@ loop(void) {
 
 	/* XXX func for this reg */
 	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
+	ym_write_reg(0xb5, 0xc0, 1);	// Both channels on
+	ym_write_reg(0xb6, 0xc0, 1);	// Both channels on
+
+	ym_write_reg(0xb4, 0xc0, 2);	// Both channels on
+	ym_write_reg(0xb5, 0xc0, 2);	// Both channels on
+	ym_write_reg(0xb6, 0xc0, 2);	// Both channels on
 
 	for (chan = 1; chan < 7; chan++) {
-		ym_set_chan_octave_and_freq(1, 4, 600);
+		ym_set_chan_octave_and_freq(chan, 4, 600);
 		ym_set_key(chan, 0);		// Key off
 	}
 
