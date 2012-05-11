@@ -53,39 +53,37 @@ extern "C" {
 #define YMVAL_A1_ON		1
 #define YMVAL_A1_OFF		0
 
-/* ym2612 registers */
-#define YMREG_CHAN1_FREQ1	0xa0
-#define YMREG_CHAN1_FREQ2	0xa4
-#define YMREG_CHAN2_FREQ1	0xa1
-#define YMREG_CHAN2_FREQ2	0xa5
-#define YMREG_CHAN3_FREQ1	0xa2
-#define YMREG_CHAN3_FREQ2	0xa6
+/*
+ * YM2612 Registers
+ */
 
-#define YMREG_CHAN1_FBACK_ALGO	0xb0
-#define YMREG_CHAN2_FBACK_ALGO	0xb1
-#define YMREG_CHAN3_FBACK_ALGO	0xb2
-
-#define YMREG_PROPRIETARY1	0x90
-#define YMREG_PROPRIETARY2	0x94
-#define YMREG_PROPRIETARY3	0x98
-#define YMREG_PROPRIETARY4	0x9c
-
-#define YMREG_KEY		0x28
+/* global ym2612 registers (YMREG_*) */
 #define YMREG_LFO		0x22
+#define YMREG_TIMER_A1		0x24
+#define YMREG_TIMER_A2		0x25
+#define YMREG_TIMER_B		0x26
 #define YMREG_CH3_TIMERS	0x27
-
+#define YMREG_KEY		0x28
 #define YMREG_DAC		0x2a
 #define YMREG_DAC_ENABLE	0x2b
+#define YMREG_OP_SSG_EG		0x90
 
-#define YMREG_DT1_MUL		0x30
-#define YMREG_TL		0x40
-#define YMREG_RS_AR		0x50
-#define YMREG_AM_D1R		0x60
-#define YMREG_D2R		0x70
-#define YMREG_D1L_RR		0x80
-#define YMREG_SSG_EG		0x90
+/* per channel ym2612 registers (YMREG_CHAN_*) */
+#define YMREG_CHAN_FREQ1	0xa0
+#define YMREG_CHAN_FREQ2	0xa4
+#define YMREG_CHAN_CH3_FREQ1	0xa8
+#define YMREG_CHAN_CH3_FREQ2	0xac
+#define YMREG_CHAN_FBACK_ALGO	0xb0
+#define YMREG_CHAN_LR_AMS_FMS	0xb4
 
-#define YMREG_FB_ALGO		0xb0
+/* per operator um2612 registers (YMREG_OP_*) */
+#define YMREG_OP_DT1_MUL	0x30
+#define YMREG_OP_TL		0x40
+#define YMREG_OP_RS_AR		0x50
+#define YMREG_OP_AM_D1R		0x60
+#define YMREG_OP_D2R		0x70
+#define YMREG_OP_D1L_RR		0x80
+#define YMREG_OP_SSG_EG		0x90
 
 /* Serial debugging? */
 #define YM_DEBUG		1
@@ -132,12 +130,7 @@ ym_zero_proprietary_regs()
 	for (op = 1; op < 5; op++) {
 		for (chan = 1; chan < 7; chan++) {
 			ym_get_chan_part_and_offset(chan, &part, &offs);
-
-			ym_write_reg(YMREG_PROPRIETARY1 + (4 * (op-1)) + offs, 0x00, part);
-			ym_write_reg(YMREG_PROPRIETARY2 + (4 * (op-1)) + offs, 0x00, part);
-			ym_write_reg(YMREG_PROPRIETARY3 + (4 * (op-1)) + offs, 0x00, part);
-			ym_write_reg(YMREG_PROPRIETARY4 + (4 * (op-1)) + offs, 0x00, part);
-
+			ym_write_reg(YMREG_OP_SSG_EG + (4 * (op-1)) + offs, 0x00, part);
 		}
 	}
 }
@@ -150,7 +143,7 @@ ym_set_dt1_mul(uint8_t chan, uint8_t op, uint8_t dt1, uint8_t mul)
 
 	ym_get_chan_part_and_offset(chan, &part, &offset);
 
-	reg = YMREG_DT1_MUL + ((op - 1) * 4) + offset;
+	reg = YMREG_OP_DT1_MUL + ((op - 1) * 4) + offset;
 
 	data = (dt1 & 0x7) << 4;
 	data |= mul & 0xf;
@@ -165,7 +158,7 @@ ym_set_am_d1r(uint8_t chan, uint8_t op, uint8_t am, uint8_t d1r)
 	uint8_t			data, part, offset, reg;
 
 	ym_get_chan_part_and_offset(chan, &part, &offset);
-	reg = YMREG_AM_D1R + ((op - 1) * 4) + offset;
+	reg = YMREG_OP_AM_D1R + ((op - 1) * 4) + offset;
 
 	data = (am & 0x1) << 7;
 	data |= (d1r & 0x1f);
@@ -180,7 +173,7 @@ ym_set_d2r(uint8_t chan, uint8_t op, uint8_t d2r)
 	uint8_t			data, part, offset, reg;
 
 	ym_get_chan_part_and_offset(chan, &part, &offset);
-	reg = YMREG_D2R + ((op - 1) * 4) + offset;
+	reg = YMREG_OP_D2R + ((op - 1) * 4) + offset;
 
 	data = d2r & 0x1f;
 
@@ -194,7 +187,7 @@ ym_set_d1l_rr(uint8_t chan, uint8_t op, uint8_t d1l, uint8_t rr)
 	uint8_t			data, part, offset, reg;
 
 	ym_get_chan_part_and_offset(chan, &part, &offset);
-	reg = YMREG_D1L_RR + ((op - 1) * 4) + offset;
+	reg = YMREG_OP_D1L_RR + ((op - 1) * 4) + offset;
 
 	data = (d1l & 0xf) << 4;
 	data = (rr & 0xf);
@@ -209,7 +202,7 @@ ym_set_rs_ar(uint8_t chan, uint8_t op, uint8_t rs, uint8_t ar)
 	uint8_t			data, part, offset, reg;
 
 	ym_get_chan_part_and_offset(chan, &part, &offset);
-	reg = YMREG_RS_AR + ((op - 1) * 4) + offset;
+	reg = YMREG_OP_RS_AR + ((op - 1) * 4) + offset;
 
 	data = (rs & 0x3) << 6;
 	data |= (ar & 0x1f);
@@ -224,7 +217,7 @@ ym_set_tl(uint8_t chan, uint8_t op, uint8_t tl)
 	uint8_t			data, part, offset, reg;
 
 	ym_get_chan_part_and_offset(chan, &part, &offset);
-	reg = YMREG_TL + ((op - 1) * 4) + offset;
+	reg = YMREG_OP_TL + ((op - 1) * 4) + offset;
 
 	data = tl & 0x7f;
 	ym_write_reg(reg, data, part);
@@ -490,8 +483,8 @@ ym_set_chan_octave_and_freq(uint8_t chan, uint8_t octave, uint16_t freq)
 
 	ym_get_chan_part_and_offset(chan, &part, &offs);
 
-	reg1 = YMREG_CHAN1_FREQ1 + offs;
-	reg2 = YMREG_CHAN1_FREQ2 + offs;
+	reg1 = YMREG_CHAN_FREQ1 + offs;
+	reg2 = YMREG_CHAN_FREQ2 + offs;
 
 	Serial.println("Offset");
 	Serial.println(offs);
@@ -515,7 +508,7 @@ ym_set_feedback_and_algo(uint8_t chan, uint8_t feedback, uint8_t algo)
 	ym_get_chan_part_and_offset(chan, &part, &offs);
 
 	data |= (algo & 0x7);
-	ym_write_reg(YMREG_FB_ALGO + offs, data, 1);
+	ym_write_reg(YMREG_CHAN_FBACK_ALGO + offs, data, 1);
 
 }
 
@@ -707,6 +700,7 @@ loop(void) {
 	/* grand piano */
 	ym_set_lfo(0, 0);		// LFO off
 
+#if 0
 	for (chan = 1; chan < 7; chan++) {
 		/* set channel multiplier and detunes */
 		ym_set_dt1_mul(chan, 1, 7, 1);
@@ -741,51 +735,123 @@ loop(void) {
 
 		ym_set_feedback_and_algo(chan, 0, 1);
 	}
+#endif
 
 
 #if 0
-	THIS FAILED - CHECK DGEN CODE
 	/*
-	 * Flying Battery Bass
+	 * Flying High Noise
 	 */
 
-	int chan;
 
 	for (chan = 1; chan < 7; chan++) {
 		/* set channel multiplier and detunes */
-		ym_set_dt1_mul(chan, 1, 3, 6);
-		ym_set_dt1_mul(chan, 2, 0, 4);
-		ym_set_dt1_mul(chan, 3, 0, 0x0a);
-		ym_set_dt1_mul(chan, 4, 5, 2);
+		ym_set_dt1_mul(chan, 1, 7, 3);
+		ym_set_dt1_mul(chan, 2, 1, 2);
+		ym_set_dt1_mul(chan, 3, 5, 5);
+		ym_set_dt1_mul(chan, 4, 3, 1);
 
-		ym_set_tl(chan, 1, 0x1b0 >> 3);
-		ym_set_tl(chan, 2, 0x108 >> 3);
-		ym_set_tl(chan, 3, 0x1cl >> 3);
-		ym_set_tl(chan, 4, 0x78 >> 3);
+		ym_set_tl(chan, 1, 0x36);
+		ym_set_tl(chan, 2, 0x21);
+		ym_set_tl(chan, 3, 0x38);
+		ym_set_tl(chan, 4, 0x0f);
 
-		ym_set_rs_ar(chan, 1, 0x03, 0x4c);
-		ym_set_rs_ar(chan, 2, 0x03, 0x48);
-		ym_set_rs_ar(chan, 3, 0x03, 0x4a);
-		ym_set_rs_ar(chan, 4, 0x03, 0x44);
+		ym_set_rs_ar(chan, 1, 0x0, 0x16);
+		ym_set_rs_ar(chan, 2, 0x00, 0x14);
+		ym_set_rs_ar(chan, 3, 0x0, 0x15);
+		ym_set_rs_ar(chan, 4, 0x0, 0x12);
 
-		ym_set_am_d1r(chan, 1, 0, 0x3c);
-		ym_set_am_d1r(chan, 2, 0, 0x2a);
-		ym_set_am_d1r(chan, 3, 0, 0x22);
-		ym_set_am_d1r(chan, 4, 0, 0x28);
+		ym_set_am_d1r(chan, 1, 0, 0x0e);
+		ym_set_am_d1r(chan, 2, 0, 0x05);
+		ym_set_am_d1r(chan, 3, 0, 0x01);
+		ym_set_am_d1r(chan, 4, 0, 0x04);
 
-		ym_set_d2r(chan, 1, 0x38);
-		ym_set_d2r(chan, 2, 0x38);
-		ym_set_d2r(chan, 3, 0x46);
-		ym_set_d2r(chan, 4, 0x36);
+		ym_set_d2r(chan, 1, 0x0c);
+		ym_set_d2r(chan, 2, 0x0c);
+		ym_set_d2r(chan, 3, 0x13);
+		ym_set_d2r(chan, 4, 0x0b);
 
-		ym_set_d1l_rr(chan, 1, 1, 1);
-		ym_set_d1l_rr(chan, 2, 1, 1);
-		ym_set_d1l_rr(chan, 3, 1, 1);
-		ym_set_d1l_rr(chan, 4, 0xa, 0x6);
+		ym_set_d1l_rr(chan, 1, 0x0f, 0x0f);
+		ym_set_d1l_rr(chan, 2, 0x0d, 0x0f);
+		ym_set_d1l_rr(chan, 3, 0x0e, 0x0f);
+		ym_set_d1l_rr(chan, 4, 0x08, 0x0f);
+
+		ym_set_feedback_and_algo(chan, 0x07, 0);
 	}
-
-	ym_set_feedback_and_algo(0x0d, 0);
 #endif
+
+#if 0
+	/* Evil electric sound */
+	for (chan = 1; chan < 7; chan++) {
+		/* set channel multiplier and detunes */
+		ym_set_dt1_mul(chan, 1, 6, 1);
+		ym_set_dt1_mul(chan, 2, 0, 1);
+		ym_set_dt1_mul(chan, 3, 0, 1);
+		ym_set_dt1_mul(chan, 4, 6, 1);
+
+		ym_set_tl(chan, 1, 0x19);
+		ym_set_tl(chan, 2, 0x17);
+		ym_set_tl(chan, 3, 0x12);
+		ym_set_tl(chan, 4, 0x13);
+
+		ym_set_rs_ar(chan, 1, 0x0, 0x10);
+		ym_set_rs_ar(chan, 2, 0x0, 0x10);
+		ym_set_rs_ar(chan, 3, 0x0, 0x11);
+		ym_set_rs_ar(chan, 4, 0x2, 0x11);
+
+		ym_set_am_d1r(chan, 1, 0, 0x06);
+		ym_set_am_d1r(chan, 2, 0, 0x1);
+		ym_set_am_d1r(chan, 3, 0, 0x01);
+		ym_set_am_d1r(chan, 4, 1, 0x1);
+
+		ym_set_d2r(chan, 1, 0x8);
+		ym_set_d2r(chan, 2, 0x9);
+		ym_set_d2r(chan, 3, 0x0);
+		ym_set_d2r(chan, 4, 0x0);
+
+		ym_set_d1l_rr(chan, 1, 0x08, 0x0f);
+		ym_set_d1l_rr(chan, 2, 0x0f, 0x0f);
+		ym_set_d1l_rr(chan, 3, 0x0f, 0x0f);
+		ym_set_d1l_rr(chan, 4, 0x0f, 0x0f);
+
+		ym_set_feedback_and_algo(chan, 0x06, 0);
+	}
+#endif
+
+	for (chan = 1; chan < 7; chan++) {
+		/* set channel multiplier and detunes */
+		ym_set_dt1_mul(chan, 1, 4, 7);
+		ym_set_dt1_mul(chan, 2, 4, 1);
+		ym_set_dt1_mul(chan, 3, 4, 0);
+		ym_set_dt1_mul(chan, 4, 4, 0);
+
+		ym_set_tl(chan, 1, 0x24);
+		ym_set_tl(chan, 2, 0x15);
+		ym_set_tl(chan, 3, 0x12);
+		ym_set_tl(chan, 4, 0x0b);
+
+		ym_set_rs_ar(chan, 1, 0x2, 0x1f);
+		ym_set_rs_ar(chan, 2, 0x0, 0x1f);
+		ym_set_rs_ar(chan, 3, 0x0, 0x1f);
+		ym_set_rs_ar(chan, 4, 0x0, 0x1f);
+
+		ym_set_am_d1r(chan, 1, 0, 0xf);
+		ym_set_am_d1r(chan, 2, 0, 0x9);
+		ym_set_am_d1r(chan, 3, 0, 0xe);
+		ym_set_am_d1r(chan, 4, 0, 0x9);
+
+		ym_set_d2r(chan, 1, 0x0);
+		ym_set_d2r(chan, 2, 0x0);
+		ym_set_d2r(chan, 3, 0x0);
+		ym_set_d2r(chan, 4, 0x0);
+
+		ym_set_d1l_rr(chan, 1, 0x0e, 0x0f);
+		ym_set_d1l_rr(chan, 2, 0x0e, 0x0f);
+		ym_set_d1l_rr(chan, 3, 0x0e, 0x0f);
+		ym_set_d1l_rr(chan, 4, 0x0e, 0x0f);
+
+		ym_set_feedback_and_algo(chan, 0x07, 3);
+	}
 
 	/* XXX func for this reg */
 	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
