@@ -461,10 +461,6 @@ ym_set_key(uint8_t chan, uint8_t onoff)
 {
 	uint8_t			data = onoff ? 0xf0 : 0x00;
 
-
-	Serial.write("Chan");
-	Serial.println(chan);
-
 	if (chan <= 3)
 		data |= (chan - 1);
 	else
@@ -486,9 +482,6 @@ ym_set_chan_octave_and_freq(uint8_t chan, uint8_t octave, uint16_t freq)
 	reg1 = YMREG_CHAN_FREQ1 + offs;
 	reg2 = YMREG_CHAN_FREQ2 + offs;
 
-	Serial.println("Offset");
-	Serial.println(offs);
-
 	/* two writes, MSB first essential */
 	data = (octave & 0x7) << 3;
 	data |= (freq & 0x0700) >> 8;
@@ -508,7 +501,7 @@ ym_set_feedback_and_algo(uint8_t chan, uint8_t feedback, uint8_t algo)
 	ym_get_chan_part_and_offset(chan, &part, &offs);
 
 	data |= (algo & 0x7);
-	ym_write_reg(YMREG_CHAN_FBACK_ALGO + offs, data, 1);
+	ym_write_reg(YMREG_CHAN_FBACK_ALGO + offs, data, part);
 
 }
 
@@ -547,7 +540,7 @@ ym_set_dac(uint8_t enable, uint8_t dac)
 uint8_t
 cycle_key_channel(uint8_t c)
 {
-	if (++c > 6)
+	if (++c > 6) /* enable other 3 chans */
 		c = 1;
 	return (c);
 }
@@ -570,9 +563,6 @@ parse_serial_input(unsigned char c)
 {
 	static uint8_t		oct = 3;
 	static uint8_t		key_chan = 1;
-
-	Serial.println("Channel:");
-	Serial.println(key_chan);
 
 	switch (c) {
 	/* Note presses */
@@ -697,10 +687,11 @@ loop(void) {
 
 	ym_set_dac(0, 0);		// no dac thanks
 
-	/* grand piano */
 	ym_set_lfo(0, 0);		// LFO off
 
 #if 0
+	/* grand piano */
+
 	for (chan = 1; chan < 7; chan++) {
 		/* set channel multiplier and detunes */
 		ym_set_dt1_mul(chan, 1, 7, 1);
@@ -734,49 +725,6 @@ loop(void) {
 		ym_set_d1l_rr(chan, 4, 0xa, 0x6);
 
 		ym_set_feedback_and_algo(chan, 0, 1);
-	}
-#endif
-
-
-#if 0
-	/*
-	 * Flying High Noise
-	 */
-
-
-	for (chan = 1; chan < 7; chan++) {
-		/* set channel multiplier and detunes */
-		ym_set_dt1_mul(chan, 1, 7, 3);
-		ym_set_dt1_mul(chan, 2, 1, 2);
-		ym_set_dt1_mul(chan, 3, 5, 5);
-		ym_set_dt1_mul(chan, 4, 3, 1);
-
-		ym_set_tl(chan, 1, 0x36);
-		ym_set_tl(chan, 2, 0x21);
-		ym_set_tl(chan, 3, 0x38);
-		ym_set_tl(chan, 4, 0x0f);
-
-		ym_set_rs_ar(chan, 1, 0x0, 0x16);
-		ym_set_rs_ar(chan, 2, 0x00, 0x14);
-		ym_set_rs_ar(chan, 3, 0x0, 0x15);
-		ym_set_rs_ar(chan, 4, 0x0, 0x12);
-
-		ym_set_am_d1r(chan, 1, 0, 0x0e);
-		ym_set_am_d1r(chan, 2, 0, 0x05);
-		ym_set_am_d1r(chan, 3, 0, 0x01);
-		ym_set_am_d1r(chan, 4, 0, 0x04);
-
-		ym_set_d2r(chan, 1, 0x0c);
-		ym_set_d2r(chan, 2, 0x0c);
-		ym_set_d2r(chan, 3, 0x13);
-		ym_set_d2r(chan, 4, 0x0b);
-
-		ym_set_d1l_rr(chan, 1, 0x0f, 0x0f);
-		ym_set_d1l_rr(chan, 2, 0x0d, 0x0f);
-		ym_set_d1l_rr(chan, 3, 0x0e, 0x0f);
-		ym_set_d1l_rr(chan, 4, 0x08, 0x0f);
-
-		ym_set_feedback_and_algo(chan, 0x07, 0);
 	}
 #endif
 
@@ -818,6 +766,45 @@ loop(void) {
 	}
 #endif
 
+#if 0
+	/* Flying battery high pitch noise */
+
+	for (chan = 1; chan < 7; chan++) {
+		/* set channel multiplier and detunes */
+		ym_set_dt1_mul(chan, 1, 7, 3);
+		ym_set_dt1_mul(chan, 2, 1, 2);
+		ym_set_dt1_mul(chan, 3, 5, 5);
+		ym_set_dt1_mul(chan, 4, 3, 1);
+
+		ym_set_tl(chan, 1, 0x36);
+		ym_set_tl(chan, 2, 0x21);
+		ym_set_tl(chan, 3, 0x38);
+		ym_set_tl(chan, 4, 0x0f);
+
+		ym_set_rs_ar(chan, 1, 0x0, 0x16);
+		ym_set_rs_ar(chan, 2, 0x0, 0x14);
+		ym_set_rs_ar(chan, 3, 0x0, 0x15);
+		ym_set_rs_ar(chan, 4, 0x0, 0x12);
+
+		ym_set_am_d1r(chan, 1, 0, 0xe);
+		ym_set_am_d1r(chan, 2, 0, 0x5);
+		ym_set_am_d1r(chan, 3, 0, 0x1);
+		ym_set_am_d1r(chan, 4, 0, 0x4);
+
+		ym_set_d2r(chan, 1, 0xc);
+		ym_set_d2r(chan, 2, 0xc);
+		ym_set_d2r(chan, 3, 0x13);
+		ym_set_d2r(chan, 4, 0xb);
+
+		ym_set_d1l_rr(chan, 1, 0x0f, 0x0f);
+		ym_set_d1l_rr(chan, 2, 0x0d, 0x0f);
+		ym_set_d1l_rr(chan, 3, 0x0e, 0x0f);
+		ym_set_d1l_rr(chan, 4, 0x08, 0x0f);
+
+		ym_set_feedback_and_algo(chan, 0x07, 0);
+	}
+#endif
+
 	for (chan = 1; chan < 7; chan++) {
 		/* set channel multiplier and detunes */
 		ym_set_dt1_mul(chan, 1, 4, 7);
@@ -840,10 +827,19 @@ loop(void) {
 		ym_set_am_d1r(chan, 3, 0, 0xe);
 		ym_set_am_d1r(chan, 4, 0, 0x9);
 
+		/* this is what my dgen instrumentation said, wrong XXX */
+		/*
 		ym_set_d2r(chan, 1, 0x0);
 		ym_set_d2r(chan, 2, 0x0);
 		ym_set_d2r(chan, 3, 0x0);
 		ym_set_d2r(chan, 4, 0x0);
+		*/
+
+		/* guessed this, sounds OK */
+		ym_set_d2r(chan, 1, 0xe);
+		ym_set_d2r(chan, 2, 0xe);
+		ym_set_d2r(chan, 3, 0xe);
+		ym_set_d2r(chan, 4, 0xe);
 
 		ym_set_d1l_rr(chan, 1, 0x0e, 0x0f);
 		ym_set_d1l_rr(chan, 2, 0x0e, 0x0f);
@@ -851,7 +847,9 @@ loop(void) {
 		ym_set_d1l_rr(chan, 4, 0x0e, 0x0f);
 
 		ym_set_feedback_and_algo(chan, 0x07, 3);
+		//ym_set_feedback_and_algo(chan, 0x00, 0);
 	}
+
 
 	/* XXX func for this reg */
 	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
