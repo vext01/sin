@@ -864,7 +864,6 @@ loop(void) {
 		char_in = Serial.read();
 
 		parse_serial_input(char_in);
-		//ym_set_key(1, 1);
 
 	}
 
