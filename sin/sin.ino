@@ -537,6 +537,22 @@ ym_set_dac(uint8_t enable, uint8_t dac)
 	ym_write_reg(YMREG_DAC_ENABLE, (enable & 0x2) << 6, 1);
 }
 
+void
+ym_set_lr_ams_fms(uint8_t ch, uint8_t l, uint8_t r, uint8_t ams, uint8_t fms)
+{
+	uint8_t			data, part, offs;
+
+	ym_get_chan_part_and_offset(ch, &part, &offs);
+
+	/* two writes, MSB first essential */
+	data = (l & 0x1) << 7;
+	data |= (r & 0x1) << 6;
+	data |= (ams & 0x7) << 3;
+	data |= fms & 0x3;
+
+	ym_write_reg(YMREG_CHAN_LR_AMS_FMS + offs, data, part);
+}
+
 uint8_t
 cycle_key_channel(uint8_t c)
 {
@@ -827,19 +843,11 @@ loop(void) {
 		ym_set_am_d1r(chan, 3, 0, 0xe);
 		ym_set_am_d1r(chan, 4, 0, 0x9);
 
-		/* this is what my dgen instrumentation said, wrong XXX */
-		/*
-		ym_set_d2r(chan, 1, 0x0);
-		ym_set_d2r(chan, 2, 0x0);
-		ym_set_d2r(chan, 3, 0x0);
-		ym_set_d2r(chan, 4, 0x0);
-		*/
-
-		/* guessed this, sounds OK */
 		ym_set_d2r(chan, 1, 0xe);
 		ym_set_d2r(chan, 2, 0xe);
 		ym_set_d2r(chan, 3, 0xe);
-		ym_set_d2r(chan, 4, 0xe);
+		ym_set_d2r(chan, 4, 0xf);
+
 
 		ym_set_d1l_rr(chan, 1, 0x0e, 0x0f);
 		ym_set_d1l_rr(chan, 2, 0x0e, 0x0f);
@@ -847,22 +855,7 @@ loop(void) {
 		ym_set_d1l_rr(chan, 4, 0x0e, 0x0f);
 
 		ym_set_feedback_and_algo(chan, 0x07, 3);
-		//ym_set_feedback_and_algo(chan, 0x00, 0);
-	}
-
-
-	/* XXX func for this reg */
-	ym_write_reg(0xb4, 0xc0, 1);	// Both channels on
-	ym_write_reg(0xb5, 0xc0, 1);	// Both channels on
-	ym_write_reg(0xb6, 0xc0, 1);	// Both channels on
-
-	ym_write_reg(0xb4, 0xc0, 2);	// Both channels on
-	ym_write_reg(0xb5, 0xc0, 2);	// Both channels on
-	ym_write_reg(0xb6, 0xc0, 2);	// Both channels on
-
-	for (chan = 1; chan < 7; chan++) {
-		ym_set_chan_octave_and_freq(chan, 4, 600);
-		ym_set_key(chan, 0);		// Key off
+		ym_set_lr_ams_fms(chan, 1, 1, 0, 0);
 	}
 
 	while (1) {
