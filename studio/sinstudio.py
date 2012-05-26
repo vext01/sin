@@ -19,7 +19,7 @@ class Channel:
         # make channel widget
         self.title_w = urwid.Text("%d:%s(%d)" %
                 (self.dchan_num, self.device, self.vchan_num))
-        self.timeline_w = urwid.Text("...\n...\n...\n...\n") # XXX
+        self.timeline_w = urwid.Edit("", multiline=True) # XXX
         self.pile_w = urwid.Pile([self.title_w, self.timeline_w])
 
     def get_widget(self):
@@ -33,7 +33,7 @@ class Channel:
             else:
                 raise SinError("Unknown keyon event")
 
-        self.timeline_w.set_text(text)
+        self.timeline_w.set_edit_text(text)
 
 class Pattern:
 
@@ -59,7 +59,8 @@ class UI:
             self.chans.append(Channel(i, "cuaU0", i, self))
 
         self.title_w = urwid.Text("SinStudio-%s" % self.version)
-        self.time_rule_w = urwid.Text("01 \n02 \n03 \n 04 \n", align="right")
+
+        self.time_rule_w = urwid.Text("01 \n02 \n03 \n 04 \netc\n", align="right")
 
         columns = [self.time_rule_w]
         columns.extend([x.get_widget() for x in self.chans])
