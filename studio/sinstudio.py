@@ -51,12 +51,22 @@ class UI:
     """ The main user interface """
 
     def __init__(self):
+        self.version = "0.1"
+
         self.chans = []
+        # hard coded for now XXX - will be able to add multiple sins and pcm
         for i in range(6):
             self.chans.append(Channel(i, "cuaU0", i, self))
 
-        self.chan_container_w = urwid.Columns([x.get_widget() for x in self.chans])
-        self.filler_w = urwid.Filler(self.chan_container_w, valign="top")
+        self.title_w = urwid.Text("SinStudio-%s" % self.version)
+        self.time_rule_w = urwid.Text("01 \n02 \n03 \n 04 \n", align="right")
+
+        columns = [self.time_rule_w]
+        columns.extend([x.get_widget() for x in self.chans])
+        self.chan_container_w = urwid.Columns(columns)
+
+        self.toplevel_pile_w = urwid.Pile([self.title_w, self.chan_container_w])
+        self.filler_w = urwid.Filler(self.toplevel_pile_w, valign="top")
         self.loop = urwid.MainLoop(self.filler_w)
 
         # XXX just one pattern for now
@@ -77,6 +87,7 @@ class UI:
     def run(self):
         self.loop.run()
 
+# Main
 if __name__ == "__main__":
     u = UI()
     u.run()
