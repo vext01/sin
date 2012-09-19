@@ -244,7 +244,7 @@ setup(void) {
 	Serial.println(":::: ::    ::   ::   ::  ");
 	Serial.println(":: : :    :    ::    :   ");
 	Serial.println("");
-	Serial.println("Sin 8-bit Instrument - https://github.com/vext01/sin");
+	Serial.println("Sin 16-bit Instrument - https://github.com/vext01/sin");
 	Serial.println(COPYRIGHT);
 	Serial.write("Version: ");
 	Serial.println(VERSION);
@@ -782,7 +782,6 @@ loop(void) {
 	}
 #endif
 
-#if 0
 	/* Flying battery high pitch noise */
 
 	for (chan = 1; chan < 7; chan++) {
@@ -819,8 +818,8 @@ loop(void) {
 
 		ym_set_feedback_and_algo(chan, 0x07, 0);
 	}
-#endif
 
+#if 0
 	for (chan = 1; chan < 7; chan++) {
 		/* set channel multiplier and detunes */
 		ym_set_dt1_mul(chan, 1, 4, 7);
@@ -857,6 +856,7 @@ loop(void) {
 		ym_set_feedback_and_algo(chan, 0x07, 3);
 		ym_set_lr_ams_fms(chan, 1, 1, 0, 0);
 	}
+#endif
 
 	while (1) {
 

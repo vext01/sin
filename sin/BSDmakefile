@@ -42,7 +42,8 @@ TARGET = ${.CURDIR:C/.*\///g}
 #AVRDUDE_PROGRAMMER = stk500
 
 ## or for newer boards like the UNO
-UPLOAD_RATE = 115200
+#UPLOAD_RATE = 115200
+UPLOAD_RATE = 57600
 PORT = /dev/cuaU0
 AVRDUDE_PROGRAMMER = arduino
 
@@ -50,7 +51,8 @@ AVRDUDE_PROGRAMMER = arduino
 #PORT = usb
 #AVRDUDE_PROGRAMMER = usbtiny
 
-MCU = atmega328p
+#MCU = atmega328p
+MCU = atmega1280
 F_CPU = 16000000
 
 #If your sketch uses any libraries, list them here, eg.
@@ -59,7 +61,8 @@ LIBRARIES=
 
 # Arduino variant, one of: "eightanaloginputs", "leonardo", "mega",
 # "micro" or "standard".
-VARIANT = standard
+#VARIANT = standard
+VARIANT = mega
 
 ############################################################################
 # Below here nothing should be changed...

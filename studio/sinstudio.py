@@ -19,21 +19,20 @@ class Channel:
         # make channel widget
         self.title_w = urwid.Text("%d:%s(%d)" %
                 (self.dchan_num, self.device, self.vchan_num))
-        self.timeline_w = urwid.Edit("", multiline=True) # XXX
-        self.pile_w = urwid.Pile([self.title_w, self.timeline_w])
+        self.timeline_w = urwid.TextCanvas(maxcol=10)
+        self.timeline_frame_w = urwid.LineBox(self.timeline_w)
+        self.pile_w = urwid.Pile([self.title_w])
 
     def get_widget(self):
         return self.pile_w
 
     def update_timeline(self, keyons):
-        text = ""
-        for k in keyons:
-            if k == None:   # No key fires here
-                text += ".....\n"
+        text = self.timeline_w.text()
+        for k in range(len(keyons)):
+            if keyons[k] == None:   # No key fires here
+               text[k] = "....." 
             else:
                 raise SinError("Unknown keyon event")
-
-        self.timeline_w.set_edit_text(text)
 
 class Pattern:
 
