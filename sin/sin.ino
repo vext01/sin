@@ -140,6 +140,9 @@ void		ym_set_key(uint8_t, uint8_t);
 
 /* misc */
 uint8_t		cycle_key_channel(uint8_t);
+
+/* midi */
+void		midi_parse_key(uint8_t, uint8_t *, uint8_t *);
 void		parse_midi_packet(uint8_t);
 
 /* ------------------------------------------------------------------
@@ -864,6 +867,7 @@ loop(void) {
 
 	/* Flying battery high pitch noise */
 
+#if 0
 	for (chan = 1; chan < 7; chan++) {
 		/* set channel multiplier and detunes */
 		ym_set_dt1_mul(chan, 1, 7, 3);
@@ -898,8 +902,8 @@ loop(void) {
 
 		ym_set_feedback_and_algo(chan, 0x07, 0);
 	}
+#endif
 
-#if 0
 	for (chan = 1; chan < 7; chan++) {
 		/* set channel multiplier and detunes */
 		ym_set_dt1_mul(chan, 1, 4, 7);
@@ -936,7 +940,7 @@ loop(void) {
 		ym_set_feedback_and_algo(chan, 0x07, 3);
 		ym_set_lr_ams_fms(chan, 1, 1, 0, 0);
 	}
-#endif
+
 	/* ask which mode */
 	Serial.println("MIDI or [S]erial debugging mode? [m/s]:");
 	while (char_in = Serial.read()) {
@@ -953,14 +957,50 @@ loop(void) {
 }
 
 void
-midi_cmd_note(uint8_t onoff, uint8_t chan)
+midi_cmd_note(uint8_t chan, uint8_t onoff)
 {
-	Serial.println("MIDI NOTE EVENT");
+	uint8_t		oct, note;
 
-	if (onoff)
-		ym_set_key(chan, 1);
-	else
-		ym_set_key(chan, 0);
+	//Serial.println("MIDI NOTE EVENT");
+	//Serial.println("CHAN");
+	//Serial.println(chan);
+	
+	while (!Serial1.available());
+	uint8_t		key = Serial1.read();
+	while (!Serial1.available());
+	uint8_t		vel = Serial1.read();
+
+	Serial.println("FURTHER BYTES");
+	Serial.println("KEY BYTE");
+	Serial.println(key);
+	Serial.println("VELOCITY BYTE");
+	Serial.println(vel);
+
+	if (onoff) {
+		midi_parse_key(key, &oct, &note);
+		ym_set_chan_octave_and_freq(chan, 3, YMNOTE_GSH);
+		ym_set_key(chan + 1, 1);
+	} else {
+		ym_set_key(chan + 1, 0);
+	}
+}
+
+/* http://www.phys.unsw.edu.au/jw/notes.html */
+void
+midi_parse_key(uint8_t kv, uint8_t *octave, uint8_t *note)
+{
+	kv = (kv & 0x7f);
+
+	// 0 is a C
+	*octave = kv / 12; // 12 semitones
+	*note = kv % 12;
+
+	Serial.println("CALCULATE NOTE");
+	Serial.println(kv);
+	Serial.println("OCTAVE: ");
+	Serial.println(octave);
+	Serial.println("NOTE: ");
+	Serial.println(note);
 }
 
 void
@@ -970,8 +1010,8 @@ parse_midi_packet(uint8_t ch)
 	uint8_t		cmd = (ch & MIDI_STAT_MASK) >> 4;
 	uint8_t		param = (ch & MIDI_PARAM_MASK);
 
-	Serial.println("Status = ");
-	Serial.println(cmd);
+	//Serial.println("Status = ");
+	//Serial.println(cmd);
 
 	switch (cmd) {
 	case MIDI_STAT_NOTE_ON:
@@ -981,7 +1021,9 @@ parse_midi_packet(uint8_t ch)
 		midi_cmd_note(param, 0);
 		break;
 	default:
-		Serial.println("Unknown MIDI status nibble");
+		//Serial.println("Unknown MIDI status byte");
+		//Serial.println(ch);
+		break;
 	};
 }
 
