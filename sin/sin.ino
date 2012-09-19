@@ -99,6 +99,20 @@ extern "C" {
 #define YMNOTE_B		1165
 #define YMNOTE_C		1235
 
+/*
+ * MIDI stuff:
+ * http://www.midi.org/techspecs/midimessages.php
+ * http://arduino.cc/en/Tutorial/Midi
+ * http://www.midi.org/techspecs/electrispec.php
+ */
+#define MIDI_BAUD		31250
+#define MIDI_STAT_MASK		0xf0
+#define MIDI_PARAM_MASK		0x0f
+
+/* MIDI status bytes */
+#define MIDI_STAT_NOTE_ON	0x9
+#define MIDI_STAT_NOTE_OFF	0x8
+
 /* Serial debugging? */
 #define YM_DEBUG		1
 uint8_t		debug_enable = 0;
@@ -126,6 +140,7 @@ void		ym_set_key(uint8_t, uint8_t);
 
 /* misc */
 uint8_t		cycle_key_channel(uint8_t);
+void		parse_midi_packet(uint8_t);
 
 /* ------------------------------------------------------------------
  * Misc
@@ -252,7 +267,16 @@ parse_serial_debugging_input(unsigned char c)
 void
 midi_input_mode()
 {
-	Serial.println("MIDI input mode not implemented (yet)");
+	uint8_t		ch;
+
+	Serial.println("MIDI input mode");
+
+	for (;;) {
+		while (!Serial1.available());
+		ch = Serial1.read();
+		
+		parse_midi_packet(ch);
+	}
 }
 
 void
@@ -407,9 +431,13 @@ void
 setup(void) {
 	int			i;
 
+	/* Turn on MIDI UART */
+	Serial1.begin(MIDI_BAUD);
+
 	/* turn on serial debugging */
 	Serial.begin(9600);
 
+	/* Fun l33t hax0r banner */
 	Serial.println("");
 	Serial.println("");
 	Serial.println(" @@@@@@   @@@  @@@  @@@  ");
@@ -924,6 +952,38 @@ loop(void) {
 		midi_input_mode();
 }
 
+void
+midi_cmd_note(uint8_t onoff, uint8_t chan)
+{
+	Serial.println("MIDI NOTE EVENT");
+
+	if (onoff)
+		ym_set_key(chan, 1);
+	else
+		ym_set_key(chan, 0);
+}
+
+void
+parse_midi_packet(uint8_t ch)
+{
+	/* split status byte into counterparts */
+	uint8_t		cmd = (ch & MIDI_STAT_MASK) >> 4;
+	uint8_t		param = (ch & MIDI_PARAM_MASK);
+
+	Serial.println("Status = ");
+	Serial.println(cmd);
+
+	switch (cmd) {
+	case MIDI_STAT_NOTE_ON:
+		midi_cmd_note(param, 1);
+		break;
+	case MIDI_STAT_NOTE_OFF:
+		midi_cmd_note(param, 0);
+		break;
+	default:
+		Serial.println("Unknown MIDI status nibble");
+	};
+}
 
 #ifdef __cplusplus
 }
