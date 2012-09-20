@@ -199,9 +199,6 @@ void		ym_write_reg(uint8_t, uint8_t, uint8_t);
 void		ym_set_chan_octave_and_freq(uint8_t, uint8_t, uint16_t);
 void		ym_set_key(uint8_t, uint8_t);
 
-/* misc */
-uint8_t		cycle_key_channel(uint8_t);
-
 /* midi */
 void		midi_parse_key(uint8_t, uint8_t *, uint8_t *);
 void		parse_midi_packet(uint8_t);
@@ -234,73 +231,61 @@ parse_serial_debugging_input(unsigned char c)
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_CSH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'w': /* D# */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_DSH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'r': /* F# */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_FSH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 't': /* G# */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_GSH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'y': /* A# */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_ASH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'a': /* D */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_D);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 's': /* E */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_E);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'd': /* F */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_F);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'f': /* G */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_G);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'g': /* A */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_A);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'h': /* B */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_B);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'j': /* C */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_C);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		//key_chan = cycle_key_channel(key_chan);
 		break;
 	/* Mute playing notes (all channels) */
 	case ' ':
@@ -859,14 +844,6 @@ ym_set_lr_ams_fms(uint8_t ch, uint8_t l, uint8_t r, uint8_t ams, uint8_t fms)
 	data |= fms & 0x3;
 
 	ym_write_reg(YMREG_CHAN_LR_AMS_FMS + offs, data, part);
-}
-
-uint8_t
-cycle_key_channel(uint8_t c)
-{
-	if (++c > 6) /* enable other 3 chans */
-		c = 1;
-	return (c);
 }
 
 void
