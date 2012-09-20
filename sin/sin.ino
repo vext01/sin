@@ -219,7 +219,7 @@ print_loaded_instr(uint8_t x)
 	Serial.println(loaded_instr_names[x - 1]);
 }
 
-void
+uint8_t
 parse_serial_debugging_input(unsigned char c)
 {
 	static uint8_t		oct = 3;
@@ -343,7 +343,12 @@ parse_serial_debugging_input(unsigned char c)
 	case ',':
 		oct = 7;
 		break;
+	case '`':
+		return (1); // causes exit
+		break;
 	};
+
+	return (0);
 }
 
 /* ------------------------------------------------------------------
@@ -358,10 +363,19 @@ midi_input_mode()
 	Serial.println("MIDI input mode");
 
 	for (;;) {
-		while (!Serial1.available());
-		ch = Serial1.read();
+
+		/* allow user to exit */
+		if (Serial.available()) {
+			ch = Serial.read();
+			if (ch == '`')
+				return;
+		}
 		
-		parse_midi_packet(ch);
+		/* read midi */
+		if (Serial1.available()) {
+			ch = Serial1.read();
+			parse_midi_packet(ch);
+		}
 	}
 }
 
@@ -369,15 +383,15 @@ void
 serial_debugging_mode()
 {
 	char			char_in;
+	uint8_t			exit = 0;
 
 	Serial.println("Serial debugging mode");
 
-	while (1) {
+	while (!exit) {
 		while (!Serial.available());
 		char_in = Serial.read();
 
-		parse_serial_debugging_input(char_in);
-
+		exit = parse_serial_debugging_input(char_in);
 	}
 	return;
 }
@@ -897,7 +911,7 @@ loop(void) {
 
 	/*
 	 * For now we just load the first few instrs from the array
-	 * defined in instrs.c
+	 * defined in instrs.c.
 	 */
 	for (instr = 0; instr < 4; instr++)
 		load_instr(&(ym_instrs[instr]), instr+1);
