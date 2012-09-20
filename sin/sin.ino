@@ -917,18 +917,20 @@ loop(void) {
 		load_instr(&(ym_instrs[instr]), instr+1);
 
 	/* Ask which mode */
-	Serial.println("MIDI or [S]erial debugging mode? [m/s]:");
-	while (char_in = Serial.read()) {
-		if ((char_in != 'm') && (char_in != 's'))
-			continue;
+	for (;;) {
+		Serial.println("MIDI or [S]erial debugging mode? [m/s]:");
+		while (char_in = Serial.read()) {
+			if ((char_in != 'm') && (char_in != 's'))
+				continue;
 
-		break;
+			break;
+		}
+
+		if (char_in == 's')
+			serial_debugging_mode();
+		else
+			midi_input_mode();
 	}
-
-	if (char_in == 's')
-		serial_debugging_mode();
-	else
-		midi_input_mode();
 }
 
 void
@@ -943,8 +945,6 @@ midi_cmd_note(uint8_t chan, uint8_t onoff)
 
 	if (onoff) {
 		midi_parse_key(key, &oct, &note);
-		//Serial.print("I WILL PLAY FREQ: ");
-		//Serial.println(note_freqs[note]);
 		ym_set_chan_octave_and_freq(chan + 1, oct, note_freqs[note]);
 		ym_set_key(chan + 1, 1);
 	} else {
