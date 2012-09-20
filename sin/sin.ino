@@ -895,9 +895,6 @@ loop(void) {
 	ym_set_dac(0, 0);		// no dac thanks
 	ym_set_lfo(0, 0);		// LFO off for now. support later? XXX
 
-	//ym_set_feedback_and_algo(chan, 0x07, 3);
-	//ym_set_lr_ams_fms(chan, 1, 1, 0, 0);
-
 	/*
 	 * For now we just load the first few instrs from the array
 	 * defined in instrs.c
