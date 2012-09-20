@@ -137,6 +137,9 @@ struct ym_2612 {
 
 /*
  * Instrument Parameters
+ * In MiOPMdrv sound bank Paramer Ver2002.04.22 format
+ * (Whatever that is...)
+ * But seriously, its a VSTi plugin.
  */
 
 struct ym_chan_params {
@@ -145,8 +148,8 @@ struct ym_chan_params {
 	uint8_t		con;
 	uint8_t		ams;
 	uint8_t		pms;
-	uint8_t		slot;
-	uint8_t		ne;
+	uint8_t		slot;	// ???
+	uint8_t		ne;	// ???
 };
 
 struct ym_oper_params {
@@ -159,7 +162,7 @@ struct ym_oper_params {
 	uint8_t		ks;
 	uint8_t		mul;
 	uint8_t		dt1;
-	uint8_t		dt2;
+	uint8_t		dt2; // unused on ym2612?
 	uint8_t		ams_en;
 };
 
@@ -171,7 +174,7 @@ struct ym_lfo_params {
 	uint8_t		nfrq; 
 }; 
 
-#define MAX_INSTR_NAME          32
+#define MAX_INSTR_NAME          64
 #define MAX_INSTR_FILENAME      64
 struct ym_instr {
 	char			name[MAX_INSTR_NAME];
@@ -181,32 +184,7 @@ struct ym_instr {
 	struct ym_oper_params	opers_params[4];
 };
 
-/* Global Instrument Defs, to be read from SD card one day */
-struct ym_instr test_instr = {
-	"s2_mycave",
-	"internal",
-	{0, 0, 0, 0, 0},
-	{64, 6, 0, 0, 0, 120, 0},
-	{
-		{24, 1, 1, 15, 15, 52, 3, 5, 0, 0, 0},
-		{24, 27, 4, 15, 2, 41, 1, 5, 0, 0, 0},
-		{22, 3, 1, 15, 3, 16, 2, 1, 0, 0, 0},
-		{20, 8, 1, 15, 3, 22, 2, 1, 6, 0, 0}
-	}
-};
-
-struct ym_instr test_instr1 = {
-	"test1",
-	"internal",
-	{0, 0, 0, 0, 0},
-	{64, 7, 2, 0, 0, 120, 0},
-	{
-		{31, 3, 2, 15, 10, 30, 0, 2, 6, 0, 0},
-		{31, 3, 2, 15, 10, 40, 2, 2, 0, 0, 0},
-		{31, 10, 2, 15, 7, 0, 0, 1, 4, 0, 0},
-		{31, 10, 2, 15, 7, 8, 0, 1, 4, 0, 0},
-	}
-};
+#include <instrs.c> // yuck, can arduino do proper externs?
 
 /* ------------------------------------------------------------------
  * Protos
@@ -243,81 +221,100 @@ parse_serial_debugging_input(unsigned char c)
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_CSH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'w': /* D# */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_DSH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'r': /* F# */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_FSH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 't': /* G# */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_GSH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'y': /* A# */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_ASH);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'a': /* D */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_D);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 's': /* E */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_E);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'd': /* F */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_F);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'f': /* G */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_G);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'g': /* A */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_A);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'h': /* B */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_B);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
 	case 'j': /* C */
 		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_C);
 		ym_set_key(key_chan, 0);
 		ym_set_key(key_chan, 1);
-		key_chan = cycle_key_channel(key_chan);
+		//key_chan = cycle_key_channel(key_chan);
 		break;
-	/* Mute playing note */
+	/* Mute playing notes (all channels) */
 	case ' ':
 		int i;
 		for (i = 1; i < 7; i++)
 			ym_set_key(i, 0);
 		break;
-	/* octave switch */
+	/* Switch Channels */
+	case '1':
+		key_chan = 1;
+		break;
+	case '2':
+		key_chan = 2;
+		break;
+	case '3':
+		key_chan = 3;
+		break;
+	case '4':
+		key_chan = 4;
+		break;
+	case '5':
+		key_chan = 5;
+		break;
+	case '6':
+		key_chan = 6;
+		break;
+	/* Octave switch */
 	case 'z':
 		oct = 0;
 		break;
@@ -752,7 +749,6 @@ void
 ym_set_key(uint8_t chan, uint8_t onoff)
 {
 	uint8_t			data = onoff ? 0xf0 : 0x00;
-	Serial.println("KEY");
 
 	if (chan <= 3)
 		data |= (chan - 1);
@@ -849,7 +845,6 @@ ym_set_lr_ams_fms(uint8_t ch, uint8_t l, uint8_t r, uint8_t ams, uint8_t fms)
 uint8_t
 cycle_key_channel(uint8_t c)
 {
-	//return 1;
 	if (++c > 6) /* enable other 3 chans */
 		c = 1;
 	return (c);
@@ -867,75 +862,34 @@ load_instr(struct ym_instr *i, uint8_t chan)
 	Serial.print(chan);
 	Serial.println("'");
 
+	/* XXX figure out what SLOT and NE are */
+		
+	for (oper = 1; oper < 5; oper++) {
+		op = &(i->opers_params[oper-1]);
+
+		ym_set_dt1_mul(chan, oper, op->dt1, op->mul);
+		ym_set_tl(chan, oper, op->tl);
+		ym_set_rs_ar(chan, oper, op->ks, op->ar);
+		ym_set_am_d1r(chan, oper, op->ams_en, op->d1r);
+		ym_set_d2r(chan, oper, op->d2r);
+		ym_set_d1l_rr(chan, oper, op->d1l, op->rr);
+	}
+
+	ym_set_feedback_and_algo(chan,
+	    i->chan_params.fl, i->chan_params.con);
+
 	ym_set_lr_ams_fms(chan,
 	    1,
 	    1,
 	    i->chan_params.ams,
 	    i->chan_params.pms);
-
-	//Serial.print("L: ");
-	//Serial.println((i->chan_params.pan & 0x80) >> 7);
-	//Serial.print("R: ");
-	//Serial.println((i->chan_params.pan & 0x40) >> 6);
-	Serial.print("AMS: ");
-	Serial.println(i->chan_params.ams);
-	Serial.print("FMS: ");
-	Serial.println(i->chan_params.pms);
-
-	ym_set_feedback_and_algo(chan,
-	    i->chan_params.fl, i->chan_params.con);
-	Serial.print("FL (feedback):");
-	Serial.println(i->chan_params.fl);
-	Serial.print("ALGO (con):");
-	Serial.println(i->chan_params.con);
-
-	/* XXX figure out what SLOT and NE are */
-		
-	for (oper = 0; oper < 4; oper++) {
-		Serial.print("OPERATOR ----------------------:");
-		Serial.println(oper);
-
-		op = &(i->opers_params[oper]);
-
-		Serial.print("DT1: ");
-		Serial.println(op->dt1);
-		Serial.print("MUL:");
-		Serial.println(op->mul);
-		ym_set_dt1_mul(chan,oper, op->dt1, op->mul);
-
-		Serial.print("TL: ");
-		Serial.println(op->tl);
-		ym_set_tl(chan, oper, op->tl);
-
-		Serial.print("RS: ");
-		Serial.println(op->ks);
-		Serial.print("AR:");
-		Serial.println(op->ar);
-		ym_set_rs_ar(chan, oper, op->ks, op->ar);
-
-		Serial.print("AM: ");
-		Serial.println(op->ams_en);
-		Serial.print("D1R: ");
-		Serial.println(op->d1r);
-		ym_set_am_d1r(chan, oper, op->ams_en, op->d1r);
-
-		Serial.print("D2R: ");
-		Serial.println(op->d2r);
-		ym_set_d2r(chan, oper, op->d2r);
-
-		Serial.print("D1L: ");
-		Serial.println(op->d1l);
-		Serial.print("RR:");
-		Serial.println(op->rr);
-		ym_set_d1l_rr(chan, oper, op->d1l, op->rr);
-	}
 }
 
 void
 loop(void) {
 	struct ym_2612		ym;
 	unsigned char		char_in;
-	uint8_t			chan;
+	uint8_t			chan, instr;
 
 	Serial.write("Waiting for ym2612 to wake up...");
 	Serial.flush();
@@ -943,170 +897,20 @@ loop(void) {
 	Serial.println("OK!");
 
 	ym_set_ch3_mode_and_timers(0, 0, 0, 0, 0, 0, 0);
-
 	ym_set_dac(0, 0);		// no dac thanks
+	ym_set_lfo(0, 0);		// LFO off for now. support later? XXX
 
-	ym_set_lfo(0, 0);		// LFO off
+	//ym_set_feedback_and_algo(chan, 0x07, 3);
+	//ym_set_lr_ams_fms(chan, 1, 1, 0, 0);
 
-#if 0
-	/* grand piano */
+	/*
+	 * For now we just load the first few instrs from the array
+	 * defined in instrs.c
+	 */
+	for (instr = 0; instr < 4; instr++)
+		load_instr(&(ym_instrs[instr]), instr+1);
 
-	for (chan = 1; chan < 7; chan++) {
-		/* set channel multiplier and detunes */
-		ym_set_dt1_mul(chan, 1, 7, 1);
-		ym_set_dt1_mul(chan, 2, 0, 13);
-		ym_set_dt1_mul(chan, 3, 3, 3);
-		ym_set_dt1_mul(chan, 4, 0, 1);
-
-		ym_set_tl(chan, 1, 0x23);
-		ym_set_tl(chan, 2, 0x2d);
-		ym_set_tl(chan, 3, 0x26);
-		ym_set_tl(chan, 4, 0x00);
-
-		ym_set_rs_ar(chan, 1, 0x02, 0x1f);
-		ym_set_rs_ar(chan, 2, 0x02, 0x19);
-		ym_set_rs_ar(chan, 3, 0x02, 0x1f);
-		ym_set_rs_ar(chan, 4, 0x02, 0x14);
-
-		ym_set_am_d1r(chan, 1, 0, 5);
-		ym_set_am_d1r(chan, 2, 0, 5);
-		ym_set_am_d1r(chan, 3, 0, 5);
-		ym_set_am_d1r(chan, 4, 0, 7);
-
-		ym_set_d2r(chan, 1, 2);
-		ym_set_d2r(chan, 2, 2);
-		ym_set_d2r(chan, 3, 2);
-		ym_set_d2r(chan, 4, 2);
-
-		ym_set_d1l_rr(chan, 1, 1, 1);
-		ym_set_d1l_rr(chan, 2, 1, 1);
-		ym_set_d1l_rr(chan, 3, 1, 1);
-		ym_set_d1l_rr(chan, 4, 0xa, 0x6);
-
-		ym_set_feedback_and_algo(chan, 0, 1);
-	}
-#endif
-
-#if 0
-	/* Evil electric sound */
-	for (chan = 1; chan < 7; chan++) {
-		/* set channel multiplier and detunes */
-		ym_set_dt1_mul(chan, 1, 6, 1);
-		ym_set_dt1_mul(chan, 2, 0, 1);
-		ym_set_dt1_mul(chan, 3, 0, 1);
-		ym_set_dt1_mul(chan, 4, 6, 1);
-
-		ym_set_tl(chan, 1, 0x19);
-		ym_set_tl(chan, 2, 0x17);
-		ym_set_tl(chan, 3, 0x12);
-		ym_set_tl(chan, 4, 0x13);
-
-		ym_set_rs_ar(chan, 1, 0x0, 0x10);
-		ym_set_rs_ar(chan, 2, 0x0, 0x10);
-		ym_set_rs_ar(chan, 3, 0x0, 0x11);
-		ym_set_rs_ar(chan, 4, 0x2, 0x11);
-
-		ym_set_am_d1r(chan, 1, 0, 0x06);
-		ym_set_am_d1r(chan, 2, 0, 0x1);
-		ym_set_am_d1r(chan, 3, 0, 0x01);
-		ym_set_am_d1r(chan, 4, 1, 0x1);
-
-		ym_set_d2r(chan, 1, 0x8);
-		ym_set_d2r(chan, 2, 0x9);
-		ym_set_d2r(chan, 3, 0x0);
-		ym_set_d2r(chan, 4, 0x0);
-
-		ym_set_d1l_rr(chan, 1, 0x08, 0x0f);
-		ym_set_d1l_rr(chan, 2, 0x0f, 0x0f);
-		ym_set_d1l_rr(chan, 3, 0x0f, 0x0f);
-		ym_set_d1l_rr(chan, 4, 0x0f, 0x0f);
-
-		ym_set_feedback_and_algo(chan, 0x06, 0);
-	}
-#endif
-
-	/* Flying battery high pitch noise */
-
-#if 0
-	for (chan = 1; chan < 7; chan++) {
-		/* set channel multiplier and detunes */
-		ym_set_dt1_mul(chan, 1, 7, 3);
-		ym_set_dt1_mul(chan, 2, 1, 2);
-		ym_set_dt1_mul(chan, 3, 5, 5);
-		ym_set_dt1_mul(chan, 4, 3, 1);
-
-		ym_set_tl(chan, 1, 0x36);
-		ym_set_tl(chan, 2, 0x21);
-		ym_set_tl(chan, 3, 0x38);
-		ym_set_tl(chan, 4, 0x0f);
-
-		ym_set_rs_ar(chan, 1, 0x0, 0x16);
-		ym_set_rs_ar(chan, 2, 0x0, 0x14);
-		ym_set_rs_ar(chan, 3, 0x0, 0x15);
-		ym_set_rs_ar(chan, 4, 0x0, 0x12);
-
-		ym_set_am_d1r(chan, 1, 0, 0xe);
-		ym_set_am_d1r(chan, 2, 0, 0x5);
-		ym_set_am_d1r(chan, 3, 0, 0x1);
-		ym_set_am_d1r(chan, 4, 0, 0x4);
-
-		ym_set_d2r(chan, 1, 0xc);
-		ym_set_d2r(chan, 2, 0xc);
-		ym_set_d2r(chan, 3, 0x13);
-		ym_set_d2r(chan, 4, 0xb);
-
-		ym_set_d1l_rr(chan, 1, 0x0f, 0x0f);
-		ym_set_d1l_rr(chan, 2, 0x0d, 0x0f);
-		ym_set_d1l_rr(chan, 3, 0x0e, 0x0f);
-		ym_set_d1l_rr(chan, 4, 0x08, 0x0f);
-
-		ym_set_feedback_and_algo(chan, 0x07, 0);
-	}
-#endif
-
-//	load_instr(&test_instr1, 1);
-
-	/* XXX S+K Flying Battery Bass */
-	for (chan = 1; chan < 7; chan++) {
-		Serial.println("LOADING");
-		/* set channel multiplier and detunes */
-		ym_set_dt1_mul(chan, 1, 4, 7);
-		ym_set_dt1_mul(chan, 2, 4, 1);
-		ym_set_dt1_mul(chan, 3, 4, 0);
-		ym_set_dt1_mul(chan, 4, 4, 0);
-
-		ym_set_tl(chan, 1, 0x24);
-		ym_set_tl(chan, 2, 0x15);
-		ym_set_tl(chan, 3, 0x12);
-		ym_set_tl(chan, 4, 0x0b);
-
-		ym_set_rs_ar(chan, 1, 0x2, 0x1f);
-		ym_set_rs_ar(chan, 2, 0x0, 0x1f);
-		ym_set_rs_ar(chan, 3, 0x0, 0x1f);
-		ym_set_rs_ar(chan, 4, 0x0, 0x1f);
-
-		ym_set_am_d1r(chan, 1, 0, 0xf);
-		ym_set_am_d1r(chan, 2, 0, 0x9);
-		ym_set_am_d1r(chan, 3, 0, 0xe);
-		ym_set_am_d1r(chan, 4, 0, 0x9);
-
-		ym_set_d2r(chan, 1, 0xe);
-		ym_set_d2r(chan, 2, 0xe);
-		ym_set_d2r(chan, 3, 0xe);
-		ym_set_d2r(chan, 4, 0xf);
-
-
-		ym_set_d1l_rr(chan, 1, 0x0e, 0x0f);
-		ym_set_d1l_rr(chan, 2, 0x0e, 0x0f);
-		ym_set_d1l_rr(chan, 3, 0x0e, 0x0f);
-		ym_set_d1l_rr(chan, 4, 0x0e, 0x0f);
-
-		ym_set_feedback_and_algo(chan, 0x07, 3);
-		ym_set_lr_ams_fms(chan, 1, 1, 0, 0);
-	}
-
-
-	/* ask which mode */
+	/* Ask which mode */
 	Serial.println("MIDI or [S]erial debugging mode? [m/s]:");
 	while (char_in = Serial.read()) {
 		if ((char_in != 'm') && (char_in != 's'))
@@ -1124,22 +928,12 @@ loop(void) {
 void
 midi_cmd_note(uint8_t chan, uint8_t onoff)
 {
-	uint8_t		oct, note;
+	uint8_t		oct, note, key, vel;
 
-	//Serial.println("MIDI NOTE EVENT");
-	//Serial.println("CHAN");
-	//Serial.println(chan);
-	
 	while (!Serial1.available());
-	uint8_t		key = Serial1.read();
+	key = Serial1.read();
 	while (!Serial1.available());
-	uint8_t		vel = Serial1.read();
-
-	//Serial.println("FURTHER BYTES");
-	//Serial.println("KEY BYTE");
-	//Serial.println(key);
-	//Serial.println("VELOCITY BYTE");
-	//Serial.println(vel);
+	vel = Serial1.read();
 
 	if (onoff) {
 		midi_parse_key(key, &oct, &note);
@@ -1165,15 +959,6 @@ midi_parse_key(uint8_t kv, uint8_t *octave, uint8_t *note)
 	 */
 	*octave = (kv / 12) - 1;
 	*note = kv % 12;
-
-#if 0
-	Serial.println("CALCULATE NOTE");
-	Serial.println(kv);
-	Serial.print("OCTAVE: ");
-	Serial.println(*octave);
-	Serial.print("NOTE: ");
-	Serial.println(*note);
-#endif
 }
 
 
@@ -1184,9 +969,6 @@ parse_midi_packet(uint8_t ch)
 	uint8_t		cmd = (ch & MIDI_STAT_MASK) >> 4;
 	uint8_t		param = (ch & MIDI_PARAM_MASK);
 
-	//Serial.println("Status = ");
-	//Serial.println(cmd);
-
 	switch (cmd) {
 	case MIDI_STAT_NOTE_ON:
 		midi_cmd_note(param, 1);
@@ -1195,8 +977,8 @@ parse_midi_packet(uint8_t ch)
 		midi_cmd_note(param, 0);
 		break;
 	default:
-		//Serial.println("Unknown MIDI status byte");
-		//Serial.println(ch);
+		Serial.println("Unknown MIDI status byte");
+		Serial.println(ch);
 		break;
 	};
 }
