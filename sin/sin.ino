@@ -86,6 +86,7 @@ extern "C" {
 #define YMREG_OP_SSG_EG		0x90
 
 /* Frequencies of notes when clocked 8MHz */
+#define YMNOTE_C_LOW		614 // just so as to map to midi better
 #define YMNOTE_CSH		654
 #define YMNOTE_D		693
 #define YMNOTE_DSH		734
@@ -112,6 +113,14 @@ extern "C" {
 /* MIDI status bytes */
 #define MIDI_STAT_NOTE_ON	0x9
 #define MIDI_STAT_NOTE_OFF	0x8
+
+/*
+ * Note indices when mapping MIDI notes modulo 12 to ym freqs
+ */
+unsigned int		note_freqs[] = {
+	YMNOTE_C_LOW, YMNOTE_CSH, YMNOTE_D, YMNOTE_DSH, YMNOTE_E, YMNOTE_F,
+	YMNOTE_FSH, YMNOTE_G, YMNOTE_GSH, YMNOTE_A, YMNOTE_ASH, YMNOTE_B
+};
 
 /* Serial debugging? */
 #define YM_DEBUG		1
@@ -970,15 +979,17 @@ midi_cmd_note(uint8_t chan, uint8_t onoff)
 	while (!Serial1.available());
 	uint8_t		vel = Serial1.read();
 
-	Serial.println("FURTHER BYTES");
-	Serial.println("KEY BYTE");
-	Serial.println(key);
-	Serial.println("VELOCITY BYTE");
-	Serial.println(vel);
+	//Serial.println("FURTHER BYTES");
+	//Serial.println("KEY BYTE");
+	//Serial.println(key);
+	//Serial.println("VELOCITY BYTE");
+	//Serial.println(vel);
 
 	if (onoff) {
 		midi_parse_key(key, &oct, &note);
-		ym_set_chan_octave_and_freq(chan, 3, YMNOTE_GSH);
+		//Serial.print("I WILL PLAY FREQ: ");
+		//Serial.println(note_freqs[note]);
+		ym_set_chan_octave_and_freq(chan + 1, oct, note_freqs[note]);
 		ym_set_key(chan + 1, 1);
 	} else {
 		ym_set_key(chan + 1, 0);
@@ -991,17 +1002,24 @@ midi_parse_key(uint8_t kv, uint8_t *octave, uint8_t *note)
 {
 	kv = (kv & 0x7f);
 
-	// 0 is a C
-	*octave = kv / 12; // 12 semitones
+	/*
+	 * 0 is a C-1.
+	 * 12 semitones in an octave.
+	 * So C0 is 0 + 12
+	 */
+	*octave = (kv / 12) - 1;
 	*note = kv % 12;
 
+#if 0
 	Serial.println("CALCULATE NOTE");
 	Serial.println(kv);
-	Serial.println("OCTAVE: ");
-	Serial.println(octave);
-	Serial.println("NOTE: ");
-	Serial.println(note);
+	Serial.print("OCTAVE: ");
+	Serial.println(*octave);
+	Serial.print("NOTE: ");
+	Serial.println(*note);
+#endif
 }
+
 
 void
 parse_midi_packet(uint8_t ch)
