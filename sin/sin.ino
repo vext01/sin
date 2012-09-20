@@ -135,6 +135,79 @@ struct ym_2612 {
 	uint8_t		a1;
 };
 
+/*
+ * Instrument Parameters
+ */
+
+struct ym_chan_params {
+	uint8_t		pan;
+	uint8_t		fl;
+	uint8_t		con;
+	uint8_t		ams;
+	uint8_t		pms;
+	uint8_t		slot;
+	uint8_t		ne;
+};
+
+struct ym_oper_params {
+	uint8_t		ar;
+	uint8_t		d1r;
+	uint8_t		d2r;
+	uint8_t		rr;
+	uint8_t		d1l;
+	uint8_t		tl;
+	uint8_t		ks;
+	uint8_t		mul;
+	uint8_t		dt1;
+	uint8_t		dt2;
+	uint8_t		ams_en;
+};
+
+struct ym_lfo_params { 
+	uint8_t		lfrq; 
+	uint8_t		amd; 
+	uint8_t		pmd; 
+	uint8_t		wf; 
+	uint8_t		nfrq; 
+}; 
+
+#define MAX_INSTR_NAME          32
+#define MAX_INSTR_FILENAME      64
+struct ym_instr {
+	char			name[MAX_INSTR_NAME];
+	char			from_filename[MAX_INSTR_FILENAME];
+	struct ym_lfo_params	lfo_params;
+	struct ym_chan_params	chan_params;
+	struct ym_oper_params	opers_params[4];
+};
+
+/* Global Instrument Defs, to be read from SD card one day */
+struct ym_instr test_instr = {
+	"s2_mycave",
+	"internal",
+	{0, 0, 0, 0, 0},
+	{64, 6, 0, 0, 0, 120, 0},
+	{
+		{24, 1, 1, 15, 15, 52, 3, 5, 0, 0, 0},
+		{24, 27, 4, 15, 2, 41, 1, 5, 0, 0, 0},
+		{22, 3, 1, 15, 3, 16, 2, 1, 0, 0, 0},
+		{20, 8, 1, 15, 3, 22, 2, 1, 6, 0, 0}
+	}
+};
+
+struct ym_instr test_instr1 = {
+	"test1",
+	"internal",
+	{0, 0, 0, 0, 0},
+	{64, 7, 2, 0, 0, 120, 0},
+	{
+		{31, 3, 2, 15, 10, 30, 0, 2, 6, 0, 0},
+		{31, 3, 2, 15, 10, 40, 2, 2, 0, 0, 0},
+		{31, 10, 2, 15, 7, 0, 0, 1, 4, 0, 0},
+		{31, 10, 2, 15, 7, 8, 0, 1, 4, 0, 0},
+	}
+};
+
 /* ------------------------------------------------------------------
  * Protos
  */
@@ -679,6 +752,7 @@ void
 ym_set_key(uint8_t chan, uint8_t onoff)
 {
 	uint8_t			data = onoff ? 0xf0 : 0x00;
+	Serial.println("KEY");
 
 	if (chan <= 3)
 		data |= (chan - 1);
@@ -775,9 +849,86 @@ ym_set_lr_ams_fms(uint8_t ch, uint8_t l, uint8_t r, uint8_t ams, uint8_t fms)
 uint8_t
 cycle_key_channel(uint8_t c)
 {
+	//return 1;
 	if (++c > 6) /* enable other 3 chans */
 		c = 1;
 	return (c);
+}
+
+void
+load_instr(struct ym_instr *i, uint8_t chan)
+{
+	uint8_t			oper;
+	struct ym_oper_params	*op;
+
+	Serial.print("Loading instrument '");
+	Serial.print(i->name);
+	Serial.print("' into chan '");
+	Serial.print(chan);
+	Serial.println("'");
+
+	ym_set_lr_ams_fms(chan,
+	    1,
+	    1,
+	    i->chan_params.ams,
+	    i->chan_params.pms);
+
+	//Serial.print("L: ");
+	//Serial.println((i->chan_params.pan & 0x80) >> 7);
+	//Serial.print("R: ");
+	//Serial.println((i->chan_params.pan & 0x40) >> 6);
+	Serial.print("AMS: ");
+	Serial.println(i->chan_params.ams);
+	Serial.print("FMS: ");
+	Serial.println(i->chan_params.pms);
+
+	ym_set_feedback_and_algo(chan,
+	    i->chan_params.fl, i->chan_params.con);
+	Serial.print("FL (feedback):");
+	Serial.println(i->chan_params.fl);
+	Serial.print("ALGO (con):");
+	Serial.println(i->chan_params.con);
+
+	/* XXX figure out what SLOT and NE are */
+		
+	for (oper = 0; oper < 4; oper++) {
+		Serial.print("OPERATOR ----------------------:");
+		Serial.println(oper);
+
+		op = &(i->opers_params[oper]);
+
+		Serial.print("DT1: ");
+		Serial.println(op->dt1);
+		Serial.print("MUL:");
+		Serial.println(op->mul);
+		ym_set_dt1_mul(chan,oper, op->dt1, op->mul);
+
+		Serial.print("TL: ");
+		Serial.println(op->tl);
+		ym_set_tl(chan, oper, op->tl);
+
+		Serial.print("RS: ");
+		Serial.println(op->ks);
+		Serial.print("AR:");
+		Serial.println(op->ar);
+		ym_set_rs_ar(chan, oper, op->ks, op->ar);
+
+		Serial.print("AM: ");
+		Serial.println(op->ams_en);
+		Serial.print("D1R: ");
+		Serial.println(op->d1r);
+		ym_set_am_d1r(chan, oper, op->ams_en, op->d1r);
+
+		Serial.print("D2R: ");
+		Serial.println(op->d2r);
+		ym_set_d2r(chan, oper, op->d2r);
+
+		Serial.print("D1L: ");
+		Serial.println(op->d1l);
+		Serial.print("RR:");
+		Serial.println(op->rr);
+		ym_set_d1l_rr(chan, oper, op->d1l, op->rr);
+	}
 }
 
 void
@@ -913,7 +1064,11 @@ loop(void) {
 	}
 #endif
 
+//	load_instr(&test_instr1, 1);
+
+	/* XXX S+K Flying Battery Bass */
 	for (chan = 1; chan < 7; chan++) {
+		Serial.println("LOADING");
 		/* set channel multiplier and detunes */
 		ym_set_dt1_mul(chan, 1, 4, 7);
 		ym_set_dt1_mul(chan, 2, 4, 1);
@@ -949,6 +1104,7 @@ loop(void) {
 		ym_set_feedback_and_algo(chan, 0x07, 3);
 		ym_set_lr_ams_fms(chan, 1, 1, 0, 0);
 	}
+
 
 	/* ask which mode */
 	Serial.println("MIDI or [S]erial debugging mode? [m/s]:");
