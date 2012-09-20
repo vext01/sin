@@ -185,6 +185,7 @@ struct ym_instr {
 };
 
 #include <instrs.c> // yuck, can arduino do proper externs?
+char		*loaded_instr_names[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 
 /* ------------------------------------------------------------------
  * Protos
@@ -208,6 +209,18 @@ void		parse_midi_packet(uint8_t);
 /* ------------------------------------------------------------------
  * Misc
  */
+
+void
+print_loaded_instr(uint8_t x)
+{
+	if (loaded_instr_names[x-1] == NULL) {
+		Serial.println("No Instrument loaded in that channel!");
+		return;
+	}
+
+	Serial.print("Switch channel: ");
+	Serial.println(loaded_instr_names[x - 1]);
+}
 
 void
 parse_serial_debugging_input(unsigned char c)
@@ -297,21 +310,27 @@ parse_serial_debugging_input(unsigned char c)
 		break;
 	/* Switch Channels */
 	case '1':
+		print_loaded_instr(1);
 		key_chan = 1;
 		break;
 	case '2':
+		print_loaded_instr(2);
 		key_chan = 2;
 		break;
 	case '3':
+		print_loaded_instr(3);
 		key_chan = 3;
 		break;
 	case '4':
+		print_loaded_instr(4);
 		key_chan = 4;
 		break;
 	case '5':
+		print_loaded_instr(5);
 		key_chan = 5;
 		break;
 	case '6':
+		print_loaded_instr(6);
 		key_chan = 6;
 		break;
 	/* Octave switch */
@@ -879,10 +898,9 @@ load_instr(struct ym_instr *i, uint8_t chan)
 	    i->chan_params.fl, i->chan_params.con);
 
 	ym_set_lr_ams_fms(chan,
-	    1,
-	    1,
-	    i->chan_params.ams,
-	    i->chan_params.pms);
+	    1, 1, i->chan_params.ams, i->chan_params.pms);
+
+	loaded_instr_names[chan - 1] = i->name;
 }
 
 void
