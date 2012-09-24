@@ -1,5 +1,5 @@
 import sys
-import tty, termios
+import ctypes
 
 from sin.output import Output
 from sin.pattern import Pattern
@@ -24,7 +24,8 @@ class Project:
                 Pattern("pat1", 32, self.outputs)
                 ]
         self.song = []
-        self.delay = 0.5 # seconds between ticks
+        self.delay = 0.5 # seconds between ticks XXX hook in
+        self.devs = {}   # midi device node ptrs (native)
 
         # commands
         # cmd_str : (method, n_args, help_str)
