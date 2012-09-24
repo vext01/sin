@@ -5,6 +5,6 @@ class Output:
         self.midi_chan = midi_chan
 
     def __str__(self):
-        return("%s: dev=%s, chan=%s" %
+        return("name='%s' dev=%s, chan=%s" %
                 (self.name, self.midi_dev, self.midi_chan))
 
