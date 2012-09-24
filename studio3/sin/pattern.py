@@ -12,7 +12,8 @@ class Pattern:
 
         self.name = name
         self.length = length    # length in ticks
-        self.outputs = outputs
+        self.outputs = outputs  # just a ref to the parent's inst
+        self.sequences = [ Sequence() for x in range(len(self.outputs)) ]
 
         # sequences indexed by MIDI channel
         self.seqs = [ Sequence() for n in range(len(outputs)) ]
@@ -26,10 +27,12 @@ class Pattern:
         pos = 0
         ao = 0 # active output
 
+        #os.system("clear")  # yuck
         while True:
             lo = max(0, pos - (Pattern.VIEWCONTEXT/2))
             hi = min(lo + Pattern.VIEWCONTEXT, self.length - 1)
 
+            #print("\33[H")
             os.system("clear")  # yuck
             print(self.timeline([lo, hi], pos, self.outputs[ao]))
 
@@ -45,6 +48,10 @@ class Pattern:
                 ao = min(len(self.outputs)-1, ao+1)
             elif key == 'h':
                 ao = max(0, ao-1)
+            elif key == 'J':
+                self.sequences[ao].note_adj_at(False, pos)
+            elif key == 'K':
+                self.sequences[ao].note_adj_at(True, pos)
 
     def timeline(self, viewport=None, now=-1, active_chan=-1):
 
@@ -62,7 +69,13 @@ class Pattern:
         t.field_names = flds
 
         for i in range(viewport[0], viewport[1]+1):
+
             marker = ">>>" if now == i else ""
-            t.add_row([marker, i, 0, 0])
+
+            ev_row = [marker, i]
+            ev_row_evs = [ x.get_event_at(i) for x in self.sequences ]
+            ev_row.extend(ev_row_evs)
+
+            t.add_row(ev_row)
 
         return t.get_string()
