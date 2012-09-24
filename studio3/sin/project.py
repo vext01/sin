@@ -20,6 +20,13 @@ class Project:
         self.libsndio.mio_open.argtypes = [ctypes.c_char_p, ctypes.c_uint, ctypes.c_int]
         self.libsndio.mio_open.restype = ctypes.c_void_p
 
+        # mio_close(3)
+        self.libsndio.mio_close.argtypes = [ctypes.c_void_p]
+
+        # mio_write(3)
+        self.libsndio.mio_write.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_ulonglong]
+        self.libsndio.mio_write.restype = ctypes.c_ulonglong
+
         # for now this is all test data XXX
         self.outputs = [
                 Output("output1", "umidi0", 1),
