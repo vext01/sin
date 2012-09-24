@@ -8,7 +8,17 @@ class Project:
 
     DELAY = 0.1
 
+    MIO_OUT =   4
+    MIO_IN =    8
+
     def __init__(self):
+
+        # We call to C for mio_* calls
+        self.libsndio = ctypes.cdll.LoadLibrary("libsndio.so")
+
+        # mio_open(3)
+        self.libsndio.mio_open.argtypes = [ctypes.c_char_p, ctypes.c_uint, ctypes.c_int]
+        self.libsndio.mio_open.restype = ctypes.c_void_p
 
         # for now this is all test data XXX
         self.outputs = [
@@ -40,6 +50,9 @@ class Project:
             "o" :   (self.cmd_output_list, 0, "List outputs"),
             "oa" :   (self.cmd_output_add, 3, "Add output: <name> <dev> <chan>"),
         }
+
+    def mio_open(self, name, bio, flag):
+        self.libsndio.mio_open(name, bio, flag)
 
     def main(self):
         # top event loop
