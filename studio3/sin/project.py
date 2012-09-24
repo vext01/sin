@@ -6,12 +6,20 @@ from sin.pattern import Pattern
 
 class Project:
 
+    DELAY = 0.1
+
     def __init__(self):
 
+        # for now this is all test data XXX
         self.outputs = [
                 Output("output1", "umidi0", 1),
-                Output("output2", "umidi0", 2)
+                Output("output2", "umidi0", 2),
+                Output("output3", "umidi0", 3),
+                Output("output4", "umidi0", 4),
+                Output("output5", "umidi0", 5),
+                Output("output6", "umidi0", 6),
                 ]
+        # for now this is all test data XXX
         self.patterns = [
                 Pattern("pat1", 32, self.outputs)
                 ]
@@ -24,6 +32,7 @@ class Project:
             "p" :   (self.cmd_pattern_list, 0, "list patterns"),
             "pe" :  (self.cmd_pattern_edit, 1, "edit pattern: <patno>"),
             "pl" :  (self.cmd_pattern_list, 0, "list patterns"),
+            "pp" :  (self.cmd_pattern_play, 1, "play pattern: <patno>"),
             "pt" :  (self.cmd_pattern_timeline, 1, "show pattern timeline: <patno>"),
             #"pa" :  self.pattern_add
             "q" :   (self.cmd_quit, 0, "quit"),
@@ -80,6 +89,15 @@ class Project:
             return
 
         pat.edit()
+
+    def cmd_pattern_play(self, args):
+        try:
+            pat = self.patterns[int(args[0], 0)]
+        except:
+            print("Unknwon pattern number")
+            return
+
+        pat.play(Project.DELAY)
 
     # ---[ Outputs ]---
     def cmd_output_list(self, args):

@@ -1,3 +1,6 @@
+import time
+import sys
+
 from sin.sequence import Sequence
 from prettytable import PrettyTable
 from sin.util import read_key
@@ -5,8 +8,7 @@ from sin.util import read_key
 import os
 
 class Pattern:
-    VIEWCONTEXT = 20
-    FASTSCROLL = 5
+    VIEWCONTEXT = 40
 
     def __init__(self, name, length, outputs):
 
@@ -20,6 +22,23 @@ class Pattern:
 
     def __str__(self):
         return "name='%s' length=%s" % (self.name, self.length)
+
+    def play(self, delay):
+        for tick in range(self.length):
+            fired=False
+            for s in range(len(self.sequences)):
+                ev = self.sequences[s].get_event_at(tick)
+
+                if ev != "...": # XXX
+                    fired = True
+                # midi send here XXX
+
+            fired_s = "*" if fired else " "
+            sys.stdout.write("\r%s: %5s/%5s [%s]" % (self.name, tick, self.length-1, fired_s))
+            sys.stdout.flush()
+            time.sleep(delay)
+        print("")
+
 
     # Edit a pattern, this could do with curses/urwid, I know XXX
     def edit(self):
@@ -64,7 +83,7 @@ class Pattern:
         t.border = 0
 
         flds = ["Now", "Tick"]
-        flds.extend([ "[" + x.name + "]" if x == active_chan else x.name for x in self.outputs ])
+        flds.extend([ "*" + x.name + "*" if x == active_chan else " " + x.name + " " for x in self.outputs ])
 
         t.field_names = flds
 
