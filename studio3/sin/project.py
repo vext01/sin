@@ -24,21 +24,27 @@ class Project:
         self.libsndio.mio_close.argtypes = [ctypes.c_void_p]
 
         # mio_write(3)
-        self.libsndio.mio_write.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_ulonglong]
+        self.libsndio.mio_write.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_ulonglong]
         self.libsndio.mio_write.restype = ctypes.c_ulonglong
+
+        # Needs to be a dict and the ability to add/remove
+        self.mio_hdl = self.mio_open("rmidi/0", Project.MIO_OUT, 0)
+        if self.mio_hdl == None:
+            print("Failed to open midi IO")
+            sys.exit(1)
 
         # for now this is all test data XXX
         self.outputs = [
-                Output("output1", "umidi0", 1),
-                Output("output2", "umidi0", 2),
-                Output("output3", "umidi0", 3),
-                Output("output4", "umidi0", 4),
-                Output("output5", "umidi0", 5),
-                Output("output6", "umidi0", 6),
+                Output("output1", self.mio_hdl, 1),
+                Output("output2", self.mio_hdl, 2),
+                Output("output3", self.mio_hdl, 3),
+                Output("output4", self.mio_hdl, 4),
+                Output("output5", self.mio_hdl, 5),
+                Output("output6", self.mio_hdl, 6),
                 ]
         # for now this is all test data XXX
         self.patterns = [
-                Pattern("pat1", 32, self.outputs)
+                Pattern(self, "pat1", 32, self.outputs)
                 ]
         self.song = []
         self.delay = 0.5 # seconds between ticks XXX hook in
@@ -56,10 +62,30 @@ class Project:
             "q" :   (self.cmd_quit, 0, "quit"),
             "o" :   (self.cmd_output_list, 0, "List outputs"),
             "oa" :   (self.cmd_output_add, 3, "Add output: <name> <dev> <chan>"),
-        }
+            }
+
+    def key_on(self, output, note_val):
+        msg = str(bytearray([0x90 + output.midi_chan, note_val & 0x7f, 0x7f]))
+        ret = self.mio_write(output.midi_dev, msg, 3)
+
+        if ret != 3:
+            print("MIDI message under-run")
+
+    def key_off(self, output):
+        msg = str(bytearray([0x80 + output.midi_chan, 0, 0x7f]))
+        ret = self.mio_write(output.midi_dev, msg, 3)
+
+        if ret != 3:
+            print("MIDI message under-run")
 
     def mio_open(self, name, bio, flag):
-        self.libsndio.mio_open(name, bio, flag)
+        return self.libsndio.mio_open(name, bio, flag)
+
+    def mio_close(self, mio_hdl_ptr):
+        self.libsndio.mio_close(mio_hdl_ptr) # returns void
+
+    def mio_write(self, mio_hdl_ptr, midi_bytes_ptr, nbytes):
+        return self.libsndio.mio_write(mio_hdl_ptr, midi_bytes_ptr, nbytes)
 
     def main(self):
         # top event loop

@@ -18,10 +18,12 @@ class Sequence:
             ev = self.events[x]
         except KeyError:
             self.events[x] = Sequence.START_NOTE
-            return
+            return self.events[x]
 
         if up:
             self.events[x] = ev + 1
         else:
             self.events[x] = ev - 1
+
+        return self.events[x]
 

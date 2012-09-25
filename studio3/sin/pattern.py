@@ -10,12 +10,13 @@ import os
 class Pattern:
     VIEWCONTEXT = 40
 
-    def __init__(self, name, length, outputs):
+    def __init__(self, project, name, length, outputs):
 
+        self.project = project
         self.name = name
         self.length = length    # length in ticks
         self.outputs = outputs  # just a ref to the parent's inst
-        self.sequences = [ Sequence() for x in range(len(self.outputs)) ]
+        self.sequences = [ Sequence() for x in range(len(self.outputs)) ] # index by output
 
         # sequences indexed by MIDI channel
         self.seqs = [ Sequence() for n in range(len(outputs)) ]
@@ -31,7 +32,8 @@ class Pattern:
 
                 if ev != "...": # XXX
                     fired = True
-                # midi send here XXX
+                    self.project.key_off(self.outputs[s])
+                    self.project.key_on(self.outputs[s], ev)
 
             fired_s = "*" if fired else " "
             sys.stdout.write("\r%s: %5s/%5s [%s]" % (self.name, tick, self.length-1, fired_s))
@@ -52,7 +54,7 @@ class Pattern:
             hi = min(lo + Pattern.VIEWCONTEXT, self.length - 1)
 
             #print("\33[H")
-            os.system("clear")  # yuck
+            #os.system("clear")  # yuck
             print(self.timeline([lo, hi], pos, self.outputs[ao]))
 
             key = read_key();
@@ -68,9 +70,16 @@ class Pattern:
             elif key == 'h':
                 ao = max(0, ao-1)
             elif key == 'J':
-                self.sequences[ao].note_adj_at(False, pos)
+                new = self.sequences[ao].note_adj_at(False, pos)
+                self.project.key_off(self.outputs[ao])
+                self.project.key_on(self.outputs[ao], new)
             elif key == 'K':
-                self.sequences[ao].note_adj_at(True, pos)
+                new = self.sequences[ao].note_adj_at(True, pos)
+                self.project.key_off(self.outputs[ao])
+                self.project.key_on(self.outputs[ao], new)
+            elif key == ' ':
+                for o in self.outputs:
+                    self.project.key_off(o)
 
     def timeline(self, viewport=None, now=-1, active_chan=-1):
 
