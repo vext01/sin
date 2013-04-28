@@ -166,13 +166,13 @@ struct ym_oper_params {
 	uint8_t		ams_en;
 };
 
-struct ym_lfo_params { 
-	uint8_t		lfrq; 
-	uint8_t		amd; 
-	uint8_t		pmd; 
-	uint8_t		wf; 
-	uint8_t		nfrq; 
-}; 
+struct ym_lfo_params {
+	uint8_t		lfrq;
+	uint8_t		amd;
+	uint8_t		pmd;
+	uint8_t		wf;
+	uint8_t		nfrq;
+};
 
 #define MAX_INSTR_NAME          64
 #define MAX_INSTR_FILENAME      64
@@ -370,7 +370,7 @@ midi_input_mode()
 			if (ch == '`')
 				return;
 		}
-		
+
 		/* read midi */
 		if (Serial1.available()) {
 			ch = Serial1.read();
@@ -873,7 +873,7 @@ load_instr(struct ym_instr *i, uint8_t chan)
 	Serial.println("'");
 
 	/* XXX figure out what SLOT and NE are */
-		
+
 	for (oper = 1; oper < 5; oper++) {
 		op = &(i->opers_params[oper-1]);
 
