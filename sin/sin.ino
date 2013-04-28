@@ -943,6 +943,9 @@ midi_cmd_note(uint8_t chan, uint8_t onoff)
 	while (!Serial1.available());
 	vel = Serial1.read();
 
+	if (vel == 0)
+		onoff = 0;
+
 	if (onoff) {
 		midi_parse_key(key, &oct, &note);
 		ym_set_chan_octave_and_freq(chan + 1, oct, note_freqs[note]);
@@ -966,7 +969,6 @@ midi_parse_key(uint8_t kv, uint8_t *octave, uint8_t *note)
 	*octave = (kv / 12) - 1;
 	*note = kv % 12;
 }
-
 
 void
 parse_midi_packet(uint8_t ch)
