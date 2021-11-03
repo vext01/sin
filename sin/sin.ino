@@ -474,6 +474,25 @@ midi_input_mode()
 	}
 }
 
+int old_dt = 0;
+
+void
+read_encoder() {
+    pinMode(22, INPUT);
+    pinMode(23, INPUT);
+
+    int dt = digitalRead(22);
+    if (dt != old_dt) {
+        int clk = digitalRead(23);
+        if (clk == dt)
+            Serial.println("left");
+        else
+            Serial.println("right");
+        old_dt = dt;
+    }
+    delay(0.2);
+}
+
 void
 serial_debugging_mode()
 {
@@ -483,10 +502,11 @@ serial_debugging_mode()
 	Serial.println("Serial debugging mode");
 
 	while (!exit) {
-		while (!Serial.available());
-		char_in = Serial.read();
-
-		exit = parse_serial_debugging_input(char_in);
+        if (Serial.available()) {
+            char_in = Serial.read();
+            exit = parse_serial_debugging_input(char_in);
+        }
+        read_encoder();
 	}
 	return;
 }
@@ -1011,6 +1031,9 @@ loop(void) {
 	for (instr = 0; instr < 4; instr++)
 		load_instr(&(ym_instrs[instr]), instr+1);
 
+    serial_debugging_mode();
+
+#if 0
 	/* Ask which mode */
 	for (;;) {
 		Serial.println("MIDI or [S]erial debugging mode? [m/s]:");
@@ -1026,6 +1049,7 @@ loop(void) {
 		else
 			midi_input_mode();
 	}
+#endif
 }
 
 void
