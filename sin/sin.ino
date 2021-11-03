@@ -474,21 +474,29 @@ midi_input_mode()
 	}
 }
 
-int old_dt = 0;
+#define ENCODER_BASE    22
+
+int old_dts[] = {0, 0, 0, 0};
 
 void
-read_encoder() {
-    pinMode(22, INPUT);
-    pinMode(23, INPUT);
+read_encoder(int which) {
+    int dt_pin = ENCODER_BASE + (which * 2);
+    int clk_pin = dt_pin +1;
 
-    int dt = digitalRead(22);
-    if (dt != old_dt) {
-        int clk = digitalRead(23);
-        if (clk == dt)
-            Serial.println("left");
-        else
-            Serial.println("right");
-        old_dt = dt;
+    pinMode(dt_pin, INPUT);
+    pinMode(clk_pin, INPUT);
+
+    int dt = digitalRead(dt_pin);
+    if (dt != old_dts[which]) {
+        int clk = digitalRead(clk_pin);
+        if (clk == dt) {
+            Serial.print(which);
+            Serial.println("++");
+        } else {
+            Serial.print(which);
+            Serial.println("--");
+        }
+        old_dts[which] = dt;
     }
     delay(0.2);
 }
@@ -506,7 +514,8 @@ serial_debugging_mode()
             char_in = Serial.read();
             exit = parse_serial_debugging_input(char_in);
         }
-        read_encoder();
+        read_encoder(0);
+        read_encoder(1);
 	}
 	return;
 }
