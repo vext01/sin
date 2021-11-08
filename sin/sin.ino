@@ -188,7 +188,7 @@ struct ym_instr {
  * Instruments table.
  */
 
-struct ym_instr ym_instrs[] =
+struct ym_instr default_instrs[] =
 {
 	{
 		"sonic2_mystic_cave_0",
@@ -979,13 +979,9 @@ loop(void) {
 	ym_set_dac(0, 0);
 	ym_set_lfo(0, 0); // LFO disabled for now. support later? XXX
 
-	/*
-	 * For now we just load the first few instrs from the array
-	 * defined in instrs.c.
-	 */
+	/* Load default instruments */
 	for (instr = 0; instr < 4; instr++)
-		load_instr(&(ym_instrs[instr]), instr+1);
-
+		load_instr(&(default_instrs[instr]), instr + 1);
 
 	/* The main input loop */
 	while (true) {
