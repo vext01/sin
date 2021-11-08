@@ -314,7 +314,7 @@ print_loaded_instr(uint8_t x)
 	Serial.println(loaded_instr_names[x - 1]);
 }
 
-uint8_t
+void
 parse_serial_debugging_input(unsigned char c)
 {
 	static uint8_t		oct = 3;
@@ -438,12 +438,9 @@ parse_serial_debugging_input(unsigned char c)
 	case ',':
 		oct = 7;
 		break;
-	case '`':
-		return (1); // causes exit
-		break;
 	};
 
-	return (0);
+	return;
 }
 
 /* ------------------------------------------------------------------
@@ -472,23 +469,6 @@ midi_input_mode()
 			parse_midi_packet(ch);
 		}
 	}
-}
-
-void
-serial_debugging_mode()
-{
-	char			char_in;
-	uint8_t			exit = 0;
-
-	Serial.println("Serial debugging mode");
-
-	while (!exit) {
-		while (!Serial.available());
-		char_in = Serial.read();
-
-		exit = parse_serial_debugging_input(char_in);
-	}
-	return;
 }
 
 /* ------------------------------------------------------------------
@@ -994,6 +974,7 @@ loop(void) {
 	struct ym_2612		ym;
 	unsigned char		char_in;
 	uint8_t			chan, instr;
+	char			ch;
 
 	Serial.write("Waiting for ym2612 to wake up...");
 	Serial.flush();
@@ -1011,21 +992,22 @@ loop(void) {
 	for (instr = 0; instr < 4; instr++)
 		load_instr(&(ym_instrs[instr]), instr+1);
 
-	/* Ask which mode */
-	for (;;) {
-		Serial.println("MIDI or [S]erial debugging mode? [m/s]:");
-		while (char_in = Serial.read()) {
-			if ((char_in != 'm') && (char_in != 's'))
-				continue;
 
-			break;
+	/* The main input loop */
+	while (true) {
+		/* read midi */
+		if (Serial1.available()) {
+			ch = Serial1.read();
+			parse_midi_packet(ch);
 		}
 
-		if (char_in == 's')
-			serial_debugging_mode();
-		else
-			midi_input_mode();
+		/* read serial debugging input */
+		if (Serial.available()) {
+			ch = Serial.read();
+			parse_serial_debugging_input(ch);
+		}
 	}
+	return; // unreachable
 }
 
 void
