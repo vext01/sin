@@ -604,8 +604,6 @@ ym_set_tl(uint8_t chan, uint8_t op, uint8_t tl)
  */
 void
 setup(void) {
-	int			i;
-
 	/* Turn on MIDI UART */
 	Serial1.begin(MIDI_BAUD);
 
@@ -645,8 +643,6 @@ __cxa_pure_virtual(void)
 void
 ym_all_pins_output()
 {
-	int			i;
-
 	/* data bus */
 	pinMode(YMPIN_D0, OUTPUT);
 	pinMode(YMPIN_D1, OUTPUT);
@@ -971,10 +967,8 @@ load_instr(struct ym_instr *i, uint8_t chan)
 
 void
 loop(void) {
-	struct ym_2612		ym;
-	unsigned char		char_in;
-	uint8_t			chan, instr;
-	char			ch;
+	uint8_t	instr;
+	char	ch;
 
 	Serial.write("Waiting for ym2612 to wake up...");
 	Serial.flush();
