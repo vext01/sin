@@ -1010,6 +1010,12 @@ midi_cmd_note(uint8_t chan, uint8_t onoff)
 	while (!Serial1.available());
 	vel = Serial1.read();
 
+	/*
+	 * FIXME: This is not the right way to deal with velocity.
+	 *
+	 * We should be calling ym_set_tl(), but only on the output operators
+	 * for the current algorithm.
+	 */
 	if (vel == 0)
 		onoff = 0;
 
