@@ -976,8 +976,8 @@ loop(void) {
 	Serial.println("OK!");
 
 	ym_set_ch3_mode_and_timers(0, 0, 0, 0, 0, 0, 0);
-	ym_set_dac(0, 0);		// no dac thanks
-	ym_set_lfo(0, 0);		// LFO off for now. support later? XXX
+	ym_set_dac(0, 0);
+	ym_set_lfo(0, 0); // LFO disabled for now. support later? XXX
 
 	/*
 	 * For now we just load the first few instrs from the array
