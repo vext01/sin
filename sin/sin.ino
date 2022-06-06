@@ -114,6 +114,9 @@ extern "C" {
 #define MIDI_STAT_NOTE_ON	0x9
 #define MIDI_STAT_NOTE_OFF	0x8
 
+#define ENCODER_BASE		22
+int old_dts[] = {0, 0, 0, 0};
+
 /*
  * Note indices when mapping MIDI notes modulo 12 to ym freqs
  */
@@ -240,9 +243,10 @@ struct ym_instr instrs[] =
 	}
 };
 
-char		*loaded_instr_names[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+struct ym_instr cur_instr;
 
-uint8_t		next_chan = 1; // Between 1 and 4.
+uint8_t		next_chan = 1; // Between 1 and 4. FIXME should go up to 6
+uint8_t		cur_oper = 1;  // Between 1 and 4.
 
 /* ------------------------------------------------------------------
  * Protos
@@ -361,7 +365,7 @@ parse_serial_debugging_input(unsigned char c)
 		for (i = 1; i < 7; i++)
 			ym_set_key(i, 0);
 		break;
-	/* Switch preset instrument */
+	/* Load preset instrument */
 	case '1':
 	case '2':
 	case '3':
@@ -369,6 +373,18 @@ parse_serial_debugging_input(unsigned char c)
 	case '5':
 	case '6':
 		load_instr(c - '1');
+		break;
+	/* Switch current operator */
+	case '7':
+	case '8':
+	case '9':
+	case '0':
+		if (c == '0')
+			cur_oper = 4;
+		else
+			cur_oper = c - '7' + 1;
+		Serial.print("operator: ");
+		Serial.println(cur_oper);
 		break;
 	/* Octave switch */
 	case 'z':
@@ -878,22 +894,74 @@ load_instr_chan(struct ym_instr *i, uint8_t chan)
 
 	ym_set_lr_ams_fms(chan,
 	    1, 1, i->chan_params.ams, i->chan_params.pms);
-
-	loaded_instr_names[chan - 1] = i->name;
 }
 
 void
 load_instr(uint8_t num)
 {
-	struct ym_instr *instr = &instrs[num];
+	cur_instr = instrs[num];
 
 	Serial.print("Loading instrument: ");
-	Serial.println(instr->name);
+	Serial.println(cur_instr.name);
 
 	for (uint8_t chan = 1; chan < 5; chan++)
-		load_instr_chan(instr, chan);
+		load_instr_chan(&cur_instr, chan);
+
 }
 
+// FIXME: encoder sends two inc/decs per click.
+int8_t
+read_encoder(int which) {
+	int dt_pin = ENCODER_BASE + (which * 2);
+	int clk_pin = dt_pin + 1;
+
+	pinMode(dt_pin, INPUT);
+	pinMode(clk_pin, INPUT);
+
+	int dt = digitalRead(dt_pin);
+	int8_t ret = 0;
+	if (dt != old_dts[which]) {
+		int clk = digitalRead(clk_pin);
+		if (clk == dt) {
+			ret = 1;
+		} else {
+			ret = -1;
+		}
+		old_dts[which] = dt;
+	}
+	return ret;
+}
+
+#define ENCDR_AR	0
+#define ENCDR_RR	1
+
+#define AR_MASK		0b11111
+#define RR_MASK		0b01111
+
+void
+read_encoders() {
+	int delta;
+
+	struct ym_oper_params *oper_params = &cur_instr.opers_params[cur_oper];
+
+	if ((delta = read_encoder(ENCDR_AR)) != 0) {
+		oper_params->ar = (oper_params->ar + delta) & AR_MASK;
+		for (int chan = 1; chan < 5; chan++)
+			ym_set_rs_ar(chan, cur_oper, oper_params->ks, oper_params->ar);
+		Serial.print("AR: ");
+		Serial.println(oper_params->ar);
+	}
+
+	if ((delta = read_encoder(ENCDR_RR)) != 0) {
+		oper_params->rr = (oper_params->rr + delta) & RR_MASK;
+		for (int chan = 1; chan < 5; chan++)
+			ym_set_d1l_rr(chan, cur_oper, oper_params->d1l,
+			oper_params->rr);
+		Serial.print("RR: ");
+		Serial.println(oper_params->rr);
+	}
+
+}
 
 void
 loop(void) {
@@ -925,6 +993,8 @@ loop(void) {
 			ch = Serial.read();
 			parse_serial_debugging_input(ch);
 		}
+
+		read_encoders();
 	}
 	return; // unreachable
 }
@@ -997,6 +1067,7 @@ parse_midi_packet(uint8_t ch)
 		break;
 	};
 }
+
 
 #ifdef __cplusplus
 }
