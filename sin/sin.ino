@@ -444,34 +444,6 @@ parse_serial_debugging_input(unsigned char c)
 }
 
 /* ------------------------------------------------------------------
- * Top level modes
- */
-
-void
-midi_input_mode()
-{
-	uint8_t		ch;
-
-	Serial.println("MIDI input mode");
-
-	for (;;) {
-
-		/* allow user to exit */
-		if (Serial.available()) {
-			ch = Serial.read();
-			if (ch == '`')
-				return;
-		}
-
-		/* read midi */
-		if (Serial1.available()) {
-			ch = Serial1.read();
-			parse_midi_packet(ch);
-		}
-	}
-}
-
-/* ------------------------------------------------------------------
  * YM2612 Routines
  */
 
