@@ -188,7 +188,7 @@ struct ym_instr {
  * Instruments table.
  */
 
-struct ym_instr default_instrs[] =
+struct ym_instr instrs[] =
 {
 	{
 		"sonic2_mystic_cave_0",
@@ -240,51 +240,15 @@ struct ym_instr default_instrs[] =
 	}
 };
 
-
-#if 0
-	/* grand piano :: The demo on the data sheet */
-
-	for (chan = 1; chan < 7; chan++) {
-		/* set channel multiplier and detunes */
-		ym_set_dt1_mul(chan, 1, 7, 1);
-		ym_set_dt1_mul(chan, 2, 0, 13);
-		ym_set_dt1_mul(chan, 3, 3, 3);
-		ym_set_dt1_mul(chan, 4, 0, 1);
-
-		ym_set_tl(chan, 1, 0x23);
-		ym_set_tl(chan, 2, 0x2d);
-		ym_set_tl(chan, 3, 0x26);
-		ym_set_tl(chan, 4, 0x00);
-
-		ym_set_rs_ar(chan, 1, 0x02, 0x1f);
-		ym_set_rs_ar(chan, 2, 0x02, 0x19);
-		ym_set_rs_ar(chan, 3, 0x02, 0x1f);
-		ym_set_rs_ar(chan, 4, 0x02, 0x14);
-
-		ym_set_am_d1r(chan, 1, 0, 5);
-		ym_set_am_d1r(chan, 2, 0, 5);
-		ym_set_am_d1r(chan, 3, 0, 5);
-		ym_set_am_d1r(chan, 4, 0, 7);
-
-		ym_set_d2r(chan, 1, 2);
-		ym_set_d2r(chan, 2, 2);
-		ym_set_d2r(chan, 3, 2);
-		ym_set_d2r(chan, 4, 2);
-
-		ym_set_d1l_rr(chan, 1, 1, 1);
-		ym_set_d1l_rr(chan, 2, 1, 1);
-		ym_set_d1l_rr(chan, 3, 1, 1);
-		ym_set_d1l_rr(chan, 4, 0xa, 0x6);
-
-		ym_set_feedback_and_algo(chan, 0, 1);
-	}
-#endif
-
 char		*loaded_instr_names[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+
+uint8_t		next_chan = 1; // Between 1 and 4.
 
 /* ------------------------------------------------------------------
  * Protos
  */
+
+// XXX: try to reorder so protos are not needed.
 
 /* low level register read/write */
 void		ym_write(struct ym_2612 *);
@@ -298,89 +262,98 @@ void		ym_set_key(uint8_t, uint8_t);
 void		midi_parse_key(uint8_t, uint8_t *, uint8_t *);
 void		parse_midi_packet(uint8_t);
 
+void		load_instr(uint8_t num);
+
 /* ------------------------------------------------------------------
  * Misc
  */
 
 void
-print_loaded_instr(uint8_t x)
+cycle_chan()
 {
-	if (loaded_instr_names[x-1] == NULL) {
-		Serial.println("No Instrument loaded in that channel!");
-		return;
-	}
-
-	Serial.print("Switch channel: ");
-	Serial.println(loaded_instr_names[x - 1]);
+	next_chan++;
+	if (next_chan == 5)
+		next_chan = 1;
 }
 
 void
 parse_serial_debugging_input(unsigned char c)
 {
 	static uint8_t		oct = 3;
-	static uint8_t		key_chan = 1;
 
 	switch (c) {
 	/* Note presses */
 	case 'q': /* C# */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_CSH);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_CSH);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'w': /* D# */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_DSH);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_DSH);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'r': /* F# */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_FSH);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_FSH);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 't': /* G# */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_GSH);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_GSH);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'y': /* A# */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_ASH);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_ASH);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'a': /* D */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_D);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_D);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 's': /* E */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_E);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_E);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'd': /* F */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_F);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_F);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'f': /* G */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_G);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_G);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'g': /* A */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_A);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_A);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'h': /* B */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_B);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_B);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	case 'j': /* C */
-		ym_set_chan_octave_and_freq(key_chan, oct, YMNOTE_C);
-		ym_set_key(key_chan, 0);
-		ym_set_key(key_chan, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, YMNOTE_C);
+		ym_set_key(next_chan, 0);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 		break;
 	/* Mute playing notes (all channels) */
 	case ' ':
@@ -388,30 +361,14 @@ parse_serial_debugging_input(unsigned char c)
 		for (i = 1; i < 7; i++)
 			ym_set_key(i, 0);
 		break;
-	/* Switch Channels */
+	/* Switch preset instrument */
 	case '1':
-		print_loaded_instr(1);
-		key_chan = 1;
-		break;
 	case '2':
-		print_loaded_instr(2);
-		key_chan = 2;
-		break;
 	case '3':
-		print_loaded_instr(3);
-		key_chan = 3;
-		break;
 	case '4':
-		print_loaded_instr(4);
-		key_chan = 4;
-		break;
 	case '5':
-		print_loaded_instr(5);
-		key_chan = 5;
-		break;
 	case '6':
-		print_loaded_instr(6);
-		key_chan = 6;
+		load_instr(c - '1');
 		break;
 	/* Octave switch */
 	case 'z':
@@ -904,16 +861,10 @@ ym_set_lr_ams_fms(uint8_t ch, uint8_t l, uint8_t r, uint8_t ams, uint8_t fms)
 }
 
 void
-load_instr(struct ym_instr *i, uint8_t chan)
+load_instr_chan(struct ym_instr *i, uint8_t chan)
 {
 	uint8_t			oper;
 	struct ym_oper_params	*op;
-
-	Serial.print("Loading instrument '");
-	Serial.print(i->name);
-	Serial.print("' into chan '");
-	Serial.print(chan);
-	Serial.println("'");
 
 	/* XXX figure out what SLOT and NE are */
 
@@ -938,10 +889,20 @@ load_instr(struct ym_instr *i, uint8_t chan)
 }
 
 void
-loop(void) {
-	uint8_t	instr;
-	char	ch;
+load_instr(uint8_t num)
+{
+	struct ym_instr *instr = &instrs[num];
 
+	Serial.print("Loading instrument: ");
+	Serial.println(instr->name);
+
+	for (uint8_t chan = 1; chan < 5; chan++)
+		load_instr_chan(instr, chan);
+}
+
+
+void
+loop(void) {
 	Serial.write("Waiting for ym2612 to wake up...");
 	Serial.flush();
 	ym_wait_until_ready();
@@ -951,17 +912,19 @@ loop(void) {
 	ym_set_dac(0, 0);
 	ym_set_lfo(0, 0); // LFO disabled for now. support later? XXX
 
-	/* Load default instruments */
-	for (instr = 0; instr < 4; instr++)
-		load_instr(&(default_instrs[instr]), instr + 1);
+	/* Load default instrument */
+	load_instr(0);
 
 	/* The main input loop */
+	char	ch;
 	while (true) {
 		/* read midi */
+		#if 0
 		if (Serial1.available()) {
 			ch = Serial1.read();
 			parse_midi_packet(ch);
 		}
+		#endif
 
 		/* read serial debugging input */
 		if (Serial.available()) {
@@ -973,7 +936,7 @@ loop(void) {
 }
 
 void
-midi_cmd_note(uint8_t chan, uint8_t onoff)
+midi_cmd_note(uint8_t onoff)
 {
 	uint8_t		oct, note, key, vel;
 
@@ -992,11 +955,15 @@ midi_cmd_note(uint8_t chan, uint8_t onoff)
 		onoff = 0;
 
 	if (onoff) {
+		Serial.write("on");
 		midi_parse_key(key, &oct, &note);
-		ym_set_chan_octave_and_freq(chan + 1, oct, note_freqs[note]);
-		ym_set_key(chan + 1, 1);
+		ym_set_chan_octave_and_freq(next_chan, oct, note_freqs[note]);
+		ym_set_key(next_chan, 1);
+		cycle_chan();
 	} else {
-		ym_set_key(chan + 1, 0);
+		// FIXME: to do note off, we will have to remember which key
+		// is active on which channel.
+		//ym_set_key(chan + 1, 0);
 	}
 }
 
@@ -1020,14 +987,15 @@ parse_midi_packet(uint8_t ch)
 {
 	/* split status byte into counterparts */
 	uint8_t		cmd = (ch & MIDI_STAT_MASK) >> 4;
-	uint8_t		param = (ch & MIDI_PARAM_MASK);
+	// FIXME: should we respond to only channel 0 for example?
+	//uint8_t		param = (ch & MIDI_PARAM_MASK);
 
 	switch (cmd) {
 	case MIDI_STAT_NOTE_ON:
-		midi_cmd_note(param, 1);
+		midi_cmd_note(1);
 		break;
 	case MIDI_STAT_NOTE_OFF:
-		midi_cmd_note(param, 0);
+		midi_cmd_note(0);
 		break;
 	default:
 		Serial.println("Unknown MIDI status byte");
