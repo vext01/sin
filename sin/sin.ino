@@ -526,49 +526,6 @@ ym_set_tl(uint8_t chan, uint8_t op, uint8_t tl)
 	ym_write_reg(reg, data, part);
 }
 
-
-/*
- * XXX at some point make it so that no junk
- * comes out the serial line if YM_DEBUG is not defined
- */
-void
-setup(void) {
-	/* Turn on MIDI UART */
-	Serial1.begin(MIDI_BAUD);
-
-	/* turn on serial debugging */
-	Serial.begin(9600);
-
-	/* Fun l33t hax0r banner */
-	Serial.println("");
-	Serial.println("");
-	Serial.println(" @@@@@@   @@@  @@@  @@@  ");
-	Serial.println("@@@@@@@   @@@  @@@@ @@@  ");
-	Serial.println("!@@       @@!  @@!@!@@@  ");
-	Serial.println("!@!       !@!  !@!!@!@!  ");
-	Serial.println("!!@@!!    !!@  @!@ !!@!  ");
-	Serial.println(" !!@!!!   !!!  !@!  !!!  ");
-	Serial.println("     !:!  !!:  !!:  !!!  ");
-	Serial.println("    !:!   :!:  :!:  !:!  ");
-	Serial.println(":::: ::    ::   ::   ::  ");
-	Serial.println(":: : :    :    ::    :   ");
-	Serial.println("");
-	Serial.println("Sin 16-bit Instrument - https://github.com/vext01/sin");
-	Serial.println(COPYRIGHT);
-	Serial.write("Version: ");
-	Serial.println(VERSION);
-
-	ym_zero_proprietary_regs();
-
-	return;
-}
-
-extern "C" void
-__cxa_pure_virtual(void)
-{
-	while(1);
-}
-
 void
 ym_all_pins_output()
 {
@@ -858,6 +815,43 @@ ym_set_lr_ams_fms(uint8_t ch, uint8_t l, uint8_t r, uint8_t ams, uint8_t fms)
 	data |= fms & 0x3;
 
 	ym_write_reg(YMREG_CHAN_LR_AMS_FMS + offs, data, part);
+}
+
+
+/* ------------------------------------------------------------------
+ * Misc routines.
+ */
+
+void
+setup(void) {
+	/* Turn on MIDI UART */
+	Serial1.begin(MIDI_BAUD);
+
+	/* turn on serial debugging */
+	Serial.begin(9600);
+
+	/* Fun l33t hax0r banner */
+	Serial.println("");
+	Serial.println("");
+	Serial.println(" @@@@@@   @@@  @@@  @@@  ");
+	Serial.println("@@@@@@@   @@@  @@@@ @@@  ");
+	Serial.println("!@@       @@!  @@!@!@@@  ");
+	Serial.println("!@!       !@!  !@!!@!@!  ");
+	Serial.println("!!@@!!    !!@  @!@ !!@!  ");
+	Serial.println(" !!@!!!   !!!  !@!  !!!  ");
+	Serial.println("     !:!  !!:  !!:  !!!  ");
+	Serial.println("    !:!   :!:  :!:  !:!  ");
+	Serial.println(":::: ::    ::   ::   ::  ");
+	Serial.println(":: : :    :    ::    :   ");
+	Serial.println("");
+	Serial.println("Sin 16-bit Instrument - https://github.com/vext01/sin");
+	Serial.println(COPYRIGHT);
+	Serial.write("Version: ");
+	Serial.println(VERSION);
+
+	ym_zero_proprietary_regs();
+
+	return;
 }
 
 void
