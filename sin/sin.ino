@@ -151,8 +151,6 @@ struct ym_chan_params {
 	uint8_t		con;
 	uint8_t		ams;
 	uint8_t		fms;
-	uint8_t		slot;	// ???
-	uint8_t		ne;	// ???
 };
 
 struct ym_oper_params {
@@ -197,7 +195,7 @@ struct ym_instr instrs[] =
 		"sonic2_mystic_cave_0",
 		"internal",
 		{0, 0, 0, 0, 0},
-		{64, 6, 0, 0, 0, 120, 0},
+		{64, 6, 0, 0, 0},
 		{
 			{24, 1, 1, 15, 15, 52, 3, 5, 0, 0, 0},
 			{24, 27, 4, 15, 2, 41, 1, 5, 0, 0, 0},
@@ -209,7 +207,7 @@ struct ym_instr instrs[] =
 		"sonic2_mystic_cave_1",
 		"internal",
 		{0, 0, 0, 0, 0},
-		{64, 7, 2, 0, 0, 120, 0},
+		{64, 7, 2, 0, 0},
 		{
 			{31, 3, 2, 15, 10, 30, 0, 2, 6, 0, 0},
 			{31, 3, 2, 15, 10, 40, 2, 2, 0, 0, 0},
@@ -221,7 +219,7 @@ struct ym_instr instrs[] =
 		"sonic2_mystic_cave2",
 		"internal",
 		{0, 0, 0, 0, 0},
-		{64, 7, 5, 0, 0, 120, 0},
+		{64, 7, 5, 0, 0},
 		{
 			{16, 7, 1, 0, 2, 25, 0, 1, 3, 0, 0},
 			{16, 8, 0, 10, 1, 16, 1, 1, 3, 0, 0},
@@ -233,7 +231,7 @@ struct ym_instr instrs[] =
 		"sonic_and_knuckles_flying_battery_bass",
 		"internal",
 		{0, 0 ,0 ,0, 0},
-		{64, 7, 3, 0, 0, 0, 0},
+		{64, 7, 3, 0, 0},
 		{
 			{0x1f, 0xf, 0xe, 0xf, 0xe, 0x24, 0x2, 7, 4, 0, 0},
 			{0x1f, 0x9, 0xe, 0xf, 0xe, 0x15, 0x0, 1, 4, 0, 0},
