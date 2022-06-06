@@ -148,7 +148,7 @@ struct ym_2612 {
 struct ym_chan_params {
 	uint8_t		pan;
 	uint8_t		fl;
-	uint8_t		con;
+	uint8_t		alg;
 	uint8_t		ams;
 	uint8_t		fms;
 };
@@ -887,7 +887,7 @@ load_instr_chan(struct ym_instr *i, uint8_t chan)
 	}
 
 	ym_set_feedback_and_algo(chan,
-	    i->chan_params.fl, i->chan_params.con);
+	    i->chan_params.fl, i->chan_params.alg);
 
 	ym_set_lr_ams_fms(chan,
 	    1, 1, i->chan_params.ams, i->chan_params.fms);
