@@ -150,7 +150,7 @@ struct ym_chan_params {
 	uint8_t		fl;
 	uint8_t		con;
 	uint8_t		ams;
-	uint8_t		pms;
+	uint8_t		fms;
 	uint8_t		slot;	// ???
 	uint8_t		ne;	// ???
 };
@@ -162,7 +162,7 @@ struct ym_oper_params {
 	uint8_t		rr;
 	uint8_t		d1l;
 	uint8_t		tl;
-	uint8_t		ks;
+	uint8_t		rs;
 	uint8_t		mul;
 	uint8_t		dt1;
 	uint8_t		dt2; // unused on ym2612?
@@ -883,7 +883,7 @@ load_instr_chan(struct ym_instr *i, uint8_t chan)
 
 		ym_set_dt1_mul(chan, oper, op->dt1, op->mul);
 		ym_set_tl(chan, oper, op->tl);
-		ym_set_rs_ar(chan, oper, op->ks, op->ar);
+		ym_set_rs_ar(chan, oper, op->rs, op->ar);
 		ym_set_am_d1r(chan, oper, op->ams_en, op->d1r);
 		ym_set_d2r(chan, oper, op->d2r);
 		ym_set_d1l_rr(chan, oper, op->d1l, op->rr);
@@ -893,7 +893,7 @@ load_instr_chan(struct ym_instr *i, uint8_t chan)
 	    i->chan_params.fl, i->chan_params.con);
 
 	ym_set_lr_ams_fms(chan,
-	    1, 1, i->chan_params.ams, i->chan_params.pms);
+	    1, 1, i->chan_params.ams, i->chan_params.fms);
 }
 
 void
@@ -947,7 +947,7 @@ read_encoders() {
 	if ((delta = read_encoder(ENCDR_AR)) != 0) {
 		oper_params->ar = (oper_params->ar + delta) & AR_MASK;
 		for (int chan = 1; chan < 5; chan++)
-			ym_set_rs_ar(chan, cur_oper, oper_params->ks, oper_params->ar);
+			ym_set_rs_ar(chan, cur_oper, oper_params->rs, oper_params->ar);
 		Serial.print("AR: ");
 		Serial.println(oper_params->ar);
 	}
