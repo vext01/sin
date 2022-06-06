@@ -115,6 +115,7 @@ extern "C" {
 #define MIDI_STAT_NOTE_OFF	0x8
 
 #define ENCODER_BASE		22
+// XXX: initialise these properly.
 int old_dts[] = {0, 0, 0, 0};
 
 /*
@@ -138,15 +139,7 @@ struct ym_2612 {
 	uint8_t		a1;
 };
 
-/*
- * Instrument Parameters
- * In MiOPMdrv sound bank Paramer Ver2002.04.22 format
- * (Whatever that is...)
- * But seriously, its a VSTi plugin.
- */
-
 struct ym_chan_params {
-	uint8_t		pan;
 	uint8_t		fl;
 	uint8_t		alg;
 	uint8_t		ams;
@@ -167,18 +160,14 @@ struct ym_oper_params {
 };
 
 struct ym_lfo_params {
+	uint8_t		lfo_en;
 	uint8_t		lfrq;
-	uint8_t		amd;
-	uint8_t		pmd;
-	uint8_t		wf;
-	uint8_t		nfrq;
 };
 
 #define MAX_INSTR_NAME          64
 #define MAX_INSTR_FILENAME      64
 struct ym_instr {
 	char			name[MAX_INSTR_NAME];
-	char			from_filename[MAX_INSTR_FILENAME];
 	struct ym_lfo_params	lfo_params;
 	struct ym_chan_params	chan_params;
 	struct ym_oper_params	opers_params[4];
@@ -192,8 +181,7 @@ struct ym_instr instrs[] =
 {
 	{
 		"sonic2_mystic_cave_0",
-		"internal",
-		{0, 0, 0, 0, 0},
+		{0, 0},
 		{6, 0, 0, 0},
 		{
 			{24, 1, 1, 15, 15, 52, 3, 5, 0, 0},
@@ -204,8 +192,7 @@ struct ym_instr instrs[] =
 	},
 	{
 		"sonic2_mystic_cave_1",
-		"internal",
-		{0, 0, 0, 0, 0},
+		{0, 0},
 		{7, 2, 0, 0},
 		{
 			{31, 3, 2, 15, 10, 30, 0, 2, 6, 0},
@@ -216,8 +203,7 @@ struct ym_instr instrs[] =
 	},
 	{
 		"sonic2_mystic_cave2",
-		"internal",
-		{0, 0, 0, 0, 0},
+		{0, 0},
 		{7, 5, 0, 0},
 		{
 			{16, 7, 1, 0, 2, 25, 0, 1, 3, 0},
@@ -228,8 +214,7 @@ struct ym_instr instrs[] =
 	},
 	{
 		"sonic_and_knuckles_flying_battery_bass",
-		"internal",
-		{0, 0 ,0 ,0, 0},
+		{0, 0},
 		{7, 3, 0, 0},
 		{
 			{0x1f, 0xf, 0xe, 0xf, 0xe, 0x24, 0x2, 7, 4, 0},
