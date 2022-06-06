@@ -130,7 +130,8 @@ unsigned int		note_freqs[] = {
 #define YM_DEBUG		1
 uint8_t		debug_enable = 0;
 
-/* no need to be mega efficient (yet) */
+// YM2612 structures
+// https://www.smspower.org/maxim/Documents/YM2612#reg60
 struct ym_2612 {
 	uint8_t		data;
 	uint8_t		wr;
@@ -140,32 +141,31 @@ struct ym_2612 {
 };
 
 struct ym_chan_params {
-	uint8_t		fl;
-	uint8_t		alg;
-	uint8_t		ams;
-	uint8_t		fms;
+	uint8_t		fl;	// feedback level
+	uint8_t		alg;	// algorithm
+	uint8_t		ams;	// LFO AM sensitivity
+	uint8_t		fms;	// LFO FM sensitivity
 };
 
 struct ym_oper_params {
-	uint8_t		ar;
-	uint8_t		d1r;
-	uint8_t		d2r;
-	uint8_t		rr;
-	uint8_t		d1l;
-	uint8_t		tl;
-	uint8_t		rs;
-	uint8_t		mul;
-	uint8_t		dt1;
-	uint8_t		ams_en;
+	uint8_t		ar;	// envelope: attack rate
+	uint8_t		d1r;	// envelope: initial decay rate
+	uint8_t		d2r;	// envelope: secondary decay rate
+	uint8_t		rr;	// envelope: release rate
+	uint8_t		d1l;	// envelope: secondary amplitude
+	uint8_t		tl;	// envelope: total level
+	uint8_t		rs;	// envelope: rate scaling
+	uint8_t		mul;	// frequency: multiplier
+	uint8_t		dt1;	// frequency: detune
+	uint8_t		am_en;  // LFO: AM enable
 };
 
 struct ym_lfo_params {
-	uint8_t		lfo_en;
-	uint8_t		lfrq;
+	uint8_t		lfo_en;	// enable LFO
+	uint8_t		lfrq;	// LFO frequency
 };
 
 #define MAX_INSTR_NAME          64
-#define MAX_INSTR_FILENAME      64
 struct ym_instr {
 	char			name[MAX_INSTR_NAME];
 	struct ym_lfo_params	lfo_params;
@@ -866,7 +866,7 @@ load_instr_chan(struct ym_instr *i, uint8_t chan)
 		ym_set_dt1_mul(chan, oper, op->dt1, op->mul);
 		ym_set_tl(chan, oper, op->tl);
 		ym_set_rs_ar(chan, oper, op->rs, op->ar);
-		ym_set_am_d1r(chan, oper, op->ams_en, op->d1r);
+		ym_set_am_d1r(chan, oper, op->am_en, op->d1r);
 		ym_set_d2r(chan, oper, op->d2r);
 		ym_set_d1l_rr(chan, oper, op->d1l, op->rr);
 	}
